@@ -1,0 +1,336 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  --background: #050506;
+  --foreground: #f5f5f7;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.07), transparent 35%),
+    radial-gradient(circle at 78% 12%, rgba(96, 165, 250, 0.08), transparent 30%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0) 30%, rgba(255, 255, 255, 0.02) 100%);
+  z-index: 0;
+}
+
+.section-shell {
+  position: relative;
+  z-index: 1;
+  padding: 5rem 1rem;
+}
+
+.hero-gradient-mask {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.15), transparent 45%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hero-image-layer {
+  position: absolute;
+  inset: 0;
+  transform: scale(1.05);
+  will-change: transform;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.84) 0%, rgba(0, 0, 0, 0.48) 45%, rgba(0, 0, 0, 0.82) 100%),
+    radial-gradient(circle at 60% 80%, rgba(214, 166, 78, 0.22), transparent 45%);
+  pointer-events: none;
+}
+
+.after-hero-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.after-hero-background-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url("/media/kobieta.jpg");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-color: #050506;
+  opacity: 0.36;
+  will-change: background-position;
+  transition: background-position 220ms ease-out;
+  pointer-events: none;
+}
+
+.after-hero-background-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(to bottom, rgba(5, 5, 6, 0.55) 0%, rgba(5, 5, 6, 0.8) 35%, rgba(5, 5, 6, 0.92) 100%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  font-size: 0.74rem;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.section-title {
+  margin-top: 0.9rem;
+  font-size: clamp(1.65rem, 2.8vw, 2.55rem);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.gold-text {
+  background: linear-gradient(100deg, #f6d88b 0%, #d4a94b 45%, #fff3cf 70%, #b7862e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 26px rgba(216, 169, 82, 0.2);
+}
+
+.section-copy {
+  margin-top: 1.2rem;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.7;
+}
+
+.rotating-headline {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4.6rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+}
+
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 0.15em;
+  background: rgba(255, 255, 255, 0.95);
+  vertical-align: -0.04em;
+  animation: blinkCursor 1s steps(1) infinite;
+}
+
+.btn-premium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(130, 130, 130, 0.08));
+  padding: 0.65rem 1.2rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+  box-shadow: 0 0 26px rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.64rem 1.1rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.85);
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.btn-active {
+  border-color: rgba(120, 227, 255, 0.8);
+  box-shadow: 0 0 20px rgba(120, 227, 255, 0.22);
+}
+
+.lang-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.38rem 0.6rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.85);
+  transition: all 0.2s ease;
+}
+
+.lang-pill-active {
+  border-color: rgba(214, 166, 78, 0.95);
+  background: rgba(214, 166, 78, 0.15);
+  box-shadow: 0 0 18px rgba(214, 166, 78, 0.2);
+  color: #f9dfac;
+}
+
+@keyframes blinkCursor {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.suggestion-dropdown {
+  position: absolute;
+  z-index: 40;
+  margin-top: 0.35rem;
+  max-height: 220px;
+  width: 100%;
+  overflow-y: auto;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(8, 8, 10, 0.96);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.suggestion-item {
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.84);
+  transition: background 0.2s ease;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vehicle-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.36rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(214, 166, 78, 0.35);
+  background: linear-gradient(145deg, rgba(214, 166, 78, 0.17), rgba(214, 166, 78, 0.06));
+  padding: 0.85rem 0.9rem 0.85rem 1.7rem;
+  text-align: left;
+  box-shadow: 0 0 18px rgba(214, 166, 78, 0.1);
+  transition: all 0.22s ease;
+}
+
+.vehicle-card:hover {
+  border-color: rgba(214, 166, 78, 0.68);
+  box-shadow: 0 0 25px rgba(214, 166, 78, 0.2);
+  transform: translateY(-1px);
+}
+
+.vehicle-card-active {
+  border-color: rgba(245, 210, 131, 0.98);
+  box-shadow: 0 0 30px rgba(214, 166, 78, 0.3);
+  background: linear-gradient(145deg, rgba(214, 166, 78, 0.27), rgba(214, 166, 78, 0.12));
+}
+
+.vehicle-dot {
+  position: absolute;
+  left: 0.7rem;
+  top: 1.05rem;
+  height: 0.45rem;
+  width: 0.45rem;
+  border-radius: 999px;
+  background: rgba(245, 210, 131, 0.95);
+  box-shadow: 0 0 12px rgba(214, 166, 78, 0.8);
+}
+
+.btn-book-now {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 210, 131, 0.9);
+  background: linear-gradient(135deg, #f6d88b 0%, #d4a94b 45%, #b7862e 100%);
+  padding: 0.78rem 1.8rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1a1307;
+  box-shadow: 0 0 28px rgba(214, 166, 78, 0.34);
+  transition: all 0.25s ease;
+}
+
+.btn-book-now:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 34px rgba(214, 166, 78, 0.46);
+}
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.48rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.field-input {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.72rem 0.9rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.field-input:focus {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 768px) {
+  .after-hero-background-image {
+    background-position: center top !important;
+    transition: none;
+  }
+
+  .section-shell {
+    padding: 4rem 1rem;
+  }
+}
