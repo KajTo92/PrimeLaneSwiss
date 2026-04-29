@@ -42,7 +42,7 @@ export function HeroSection({ language }: HeroSectionProps) {
           transition={{ duration: 0.8 }}
           className="mb-8 text-center"
         >
-          <RotatingHeadline phrases={rotatingPhrases} intervalMs={3200} />
+          <RotatingHeadline phrases={rotatingPhrases} intervalMs={3200} mode="typing" />
         </motion.div>
 
         <div className="grid items-center gap-10 lg:grid-cols-2">
@@ -77,13 +77,13 @@ export function HeroSection({ language }: HeroSectionProps) {
                 className="h-30 w-auto object-contain"
               />
             </div>
-            <h2 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl">
+            <h2 className="mt-4 text-2xl font-semibold leading-[0.8] text-white sm:text-4xl">
               <span className="gold-text block">PRIME LANE</span>
-              <span className="block">
+              <span className="-mt-1 block">
                 <span className="inline-block text-[0.28em] font-medium tracking-[0.30em] text-white/72">
-                  GMBH
+                  GMBH SWISS
                 </span>{" "}
-                SWISS
+                
               </span>
             </h2>
             <p className="mt-7 text-sm text-white/75 sm:text-base">

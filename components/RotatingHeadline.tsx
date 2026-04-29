@@ -21,32 +21,48 @@ export function RotatingHeadline({
   const safePhrases = phrases.length ? phrases : ["Premium Transport"];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [typedLength, setTypedLength] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   const activePhrase = safePhrases[currentIndex];
 
   useEffect(() => {
+    if (mode === "typing") {
+      return;
+    }
+
     const intervalId = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % safePhrases.length);
       setTypedLength(0);
     }, intervalMs);
 
     return () => clearInterval(intervalId);
-  }, [intervalMs, safePhrases.length]);
+  }, [intervalMs, mode, safePhrases.length]);
 
   useEffect(() => {
     if (mode !== "typing") {
       return;
     }
 
-    if (typedLength >= activePhrase.length) {
-      return;
-    }
+    const isComplete = typedLength === activePhrase.length;
+    const isEmpty = typedLength === 0;
+    const delay = isComplete && !isDeleting ? Math.max(intervalMs - activePhrase.length * 55, 900) : isDeleting ? 32 : 55;
 
     const timeoutId = setTimeout(() => {
-      setTypedLength((prev) => prev + 1);
-    }, 55);
+      if (isComplete && !isDeleting) {
+        setIsDeleting(true);
+        return;
+      }
+
+      if (isEmpty && isDeleting) {
+        setIsDeleting(false);
+        setCurrentIndex((prev) => (prev + 1) % safePhrases.length);
+        return;
+      }
+
+      setTypedLength((prev) => prev + (isDeleting ? -1 : 1));
+    }, delay);
 
     return () => clearTimeout(timeoutId);
-  }, [activePhrase, mode, typedLength]);
+  }, [activePhrase, intervalMs, isDeleting, mode, safePhrases.length, typedLength]);
 
   if (mode === "typing") {
     return (

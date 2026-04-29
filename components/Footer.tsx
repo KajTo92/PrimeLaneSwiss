@@ -7,7 +7,7 @@ type FooterProps = {
 export function Footer({ language }: FooterProps) {
   return (
     <footer className="border-t border-white/10 bg-black/50">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-white/60 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col items-end gap-3 px-4 py-8 text-right text-sm text-white/60 sm:px-6 lg:px-8">
         <p className="text-white/85">
            <span className="gold-text">Prime Lane</span> GmbH - Swiss
         </p>
