@@ -13,7 +13,7 @@ export function HeroSection({ language }: HeroSectionProps) {
   const parallaxY = useTransform(scrollY, [0, 500], [0, 60]);
   const rotatingPhrases =
     language === "de"
-      ? ["Reisen mit Komfort", "Schweizer Qualitatsfahrten", "24/7 Service"]
+      ? ["Reisen mit Komfort", "Swiss Qualitat", "24/7 Service", 'Premium Transport']
       : ["Premium Transport", "Luxury Taxi Service", "Travel in Comfort", "Swiss Quality Rides"];
 
   return (
@@ -46,12 +46,12 @@ export function HeroSection({ language }: HeroSectionProps) {
         </motion.div>
 
         <div className="grid items-center gap-10 lg:grid-cols-2">
-    <div className="text-center lg:text-left">
-            <p className="text-xs tracking-[0.35em] text-white/60">
+          <div className="order-2 text-center lg:order-1 lg:text-left">
+            <p className="hidden text-xs tracking-[0.35em] text-white/60 sm:block">
               PRIME LANE GMBH - Swiss
             </p>
          
-            <h2 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl">
+            <h2 className="mt-4 hidden text-2xl font-semibold leading-tight text-white sm:block sm:text-4xl">
               {language === "de" ? "Exklusiver Fahrservice" : "Exclusive Chauffeur Service"}
             </h2>
             <p className="mt-2 text-sm text-white/75 sm:text-base">
@@ -61,7 +61,7 @@ export function HeroSection({ language }: HeroSectionProps) {
             </p>
           </div>
 
-          <div className="text-center lg:text-right lg:justify-self-end">
+          <div className="order-1 text-center lg:order-2 lg:justify-self-end lg:text-right">
             
             <div className="mt-2 flex justify-center lg:justify-end">
               <img
@@ -74,7 +74,7 @@ export function HeroSection({ language }: HeroSectionProps) {
                 onError={(event) => {
                   event.currentTarget.src = "/media/logo2.png";
                 }}
-                className="h-27 w-auto object-contain"
+                className="h-30 w-auto object-contain"
               />
             </div>
             <h2 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl">
