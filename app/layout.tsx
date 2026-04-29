@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Swiss Prime Lane GmbH",
+  title: "PRIME LANE GMBH SWISS",
   description: "Premium Transport Across Switzerland",
   icons: {
     icon: "/favicon.png",
