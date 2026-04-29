@@ -78,13 +78,15 @@ export function HeroSection({ language }: HeroSectionProps) {
               />
             </div>
             <h2 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl">
-              <span className="gold-text">PRIME LANE</span>{" "}
-              <span className=" inline-block text-[0.22em] font-medium tracking-[0.18em] text-white/72">
-                GMBH
-              </span>{" "}
-              SWISS
+              <span className="gold-text block">PRIME LANE</span>
+              <span className="block">
+                <span className="inline-block text-[0.28em] font-medium tracking-[0.30em] text-white/72">
+                  GMBH
+                </span>{" "}
+                SWISS
+              </span>
             </h2>
-            <p className="mt-2 text-sm text-white/75 sm:text-base">
+            <p className="mt-7 text-sm text-white/75 sm:text-base">
               {language === "de"
                 ? "Diskret, punktlich und mit hochstem Komfort."
                 : "Discrete, punctual, and exceptionally comfortable."}

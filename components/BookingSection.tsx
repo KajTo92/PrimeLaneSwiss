@@ -21,7 +21,7 @@ type RouteResult = {
 };
 
 type CarOption = {
-  id: "tesla-x" | "tesla-y" | "prius";
+  id: "tesla-x" | "tesla-y" | "mercedes-v-class" | "prius";
   name: string;
   ratePerKm: number;
 };
@@ -36,6 +36,7 @@ const toCoordString = (coords: Coordinates | null) =>
 const carOptions: CarOption[] = [
   { id: "tesla-x", name: "Tesla X", ratePerKm: 3 },
   { id: "tesla-y", name: "Tesla Y", ratePerKm: 3 },
+  { id: "mercedes-v-class", name: "Mercedes V-Class", ratePerKm: 3 },
   { id: "prius", name: "Toyota Prius", ratePerKm: 1.5 },
 ];
 
@@ -179,6 +180,21 @@ export function BookingSection({ language }: BookingSectionProps) {
     setDestinationSuggestions([]);
   };
 
+  const handleSelectMapAddress = (suggestion: LocationSuggestion) => {
+    if (activeField === "pickup") {
+      skipPickupQueryRef.current = true;
+      setPickupText(suggestion.label);
+      setPickup({ lat: suggestion.lat, lng: suggestion.lng });
+      setPickupSuggestions([]);
+      return;
+    }
+
+    skipDestinationQueryRef.current = true;
+    setDestinationText(suggestion.label);
+    setDestination({ lat: suggestion.lat, lng: suggestion.lng });
+    setDestinationSuggestions([]);
+  };
+
   const handleCalculateRoute = async () => {
     if (!canCalculate) {
       setRouteInfo(
@@ -268,6 +284,7 @@ export function BookingSection({ language }: BookingSectionProps) {
         carName: selectedCar.name,
         ratePerKm: selectedCar.ratePerKm,
         distanceKm: routeResult.distanceKm,
+        durationMin: routeResult.durationMin,
         estimatedPrice: routeResult.estimatedPrice,
       }),
     });
@@ -441,23 +458,6 @@ export function BookingSection({ language }: BookingSectionProps) {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setActiveField("pickup")}
-              className={`btn-secondary ${activeField === "pickup" ? "btn-active" : ""}`}
-            >
-              {language === "de" ? "Abholort auf Karte wahlen" : "Select Pickup on Map"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveField("destination")}
-              className={`btn-secondary ${activeField === "destination" ? "btn-active" : ""}`}
-            >
-              {language === "de" ? "Zielort auf Karte wahlen" : "Select Destination on Map"}
-            </button>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
             <button type="button" onClick={handleCalculateRoute} className="btn-premium">
               {language === "de" ? "Route berechnen" : "Calculate Route"}
             </button>
@@ -501,6 +501,8 @@ export function BookingSection({ language }: BookingSectionProps) {
             activeField={activeField}
             pickup={pickup}
             destination={destination}
+            onActiveFieldChange={setActiveField}
+            onSelectAddress={handleSelectMapAddress}
             onSelectPoint={handleSelectPoint}
           />
         </motion.div>

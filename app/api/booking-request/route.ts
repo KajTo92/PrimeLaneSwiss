@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 
 type BookingBody = {
   pickupLabel: string;
@@ -10,18 +9,14 @@ type BookingBody = {
   carName: string;
   ratePerKm: number;
   distanceKm: number;
+  durationMin: number;
   estimatedPrice: number;
 };
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as BookingBody;
 
-  const companyEmail = process.env.COMPANY_BOOKING_EMAIL ?? "contact@swissprimelane.ch";
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = Number(process.env.SMTP_PORT ?? "587");
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const fromEmail = process.env.SMTP_FROM ?? companyEmail;
+  const accessKey = process.env.WEB3FORMS_ACCESS_KEY ?? "e549531d-071d-4fb4-b851-ca1854aa3802";
 
   const content = `
 Neue Buchungsanfrage
@@ -34,33 +29,44 @@ Kunden Telefon: ${body.customerPhone || "Nicht angegeben"}
 Fahrzeug: ${body.carName}
 Preis pro km: CHF ${body.ratePerKm.toFixed(2)}
 Distanz: ${body.distanceKm.toFixed(2)} km
-Geschaftzter Preis: CHF ${body.estimatedPrice.toFixed(2)}
+Fahrzeit: ${body.durationMin.toFixed(0)} min
+Geschatzter Preis: CHF ${body.estimatedPrice.toFixed(2)}
 `;
 
-  if (smtpHost && smtpUser && smtpPass) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-      });
+  const formData = new FormData();
+  formData.append("access_key", accessKey);
+  formData.append("subject", "Neue Fahrtanfrage - Swiss Prime Lane");
+  formData.append("from_name", "Swiss Prime Lane Website");
+  formData.append("email", body.customerEmail);
+  formData.append("Abholort", body.pickupLabel);
+  formData.append("Zielort", body.destinationLabel);
+  formData.append("Datum/Uhrzeit", body.dateTime || "Nicht angegeben");
+  formData.append("Kunden E-Mail", body.customerEmail || "Nicht angegeben");
+  formData.append("Kunden Telefon", body.customerPhone || "Nicht angegeben");
+  formData.append("Fahrzeug", body.carName);
+  formData.append("Preis pro km", `CHF ${body.ratePerKm.toFixed(2)}`);
+  formData.append("Distanz", `${body.distanceKm.toFixed(2)} km`);
+  formData.append("Fahrzeit", `${body.durationMin.toFixed(0)} min`);
+  formData.append("Geschatzter Preis", `CHF ${body.estimatedPrice.toFixed(2)}`);
+  formData.append("message", content);
 
-      await transporter.sendMail({
-        from: fromEmail,
-        to: companyEmail,
-        subject: "Neue Fahrtanfrage - Swiss Prime Lane",
-        text: content,
-      });
+  try {
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      body: formData,
+    });
 
-      return NextResponse.json({ success: true, sent: true });
-    } catch {
-      return NextResponse.json({ success: false, sent: false }, { status: 500 });
+    const data = (await response.json()) as { success?: boolean; message?: string };
+
+    if (!response.ok || !data.success) {
+      return NextResponse.json(
+        { success: false, message: data.message ?? "Web3Forms request failed" },
+        { status: 500 }
+      );
     }
-  }
 
-  return NextResponse.json({ success: true, sent: false, simulated: true });
+    return NextResponse.json({ success: true, sent: true });
+  } catch {
+    return NextResponse.json({ success: false, message: "Web3Forms request failed" }, { status: 500 });
+  }
 }
