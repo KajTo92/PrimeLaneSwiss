@@ -272,24 +272,56 @@ export function BookingSection({ language }: BookingSectionProps) {
       return;
     }
 
-    const response = await fetch("/api/booking-request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pickupLabel: pickupText,
-        destinationLabel: destinationText,
-        dateTime,
-        customerEmail,
-        customerPhone,
-        carName: selectedCar.name,
-        ratePerKm: selectedCar.ratePerKm,
-        distanceKm: routeResult.distanceKm,
-        durationMin: routeResult.durationMin,
-        estimatedPrice: routeResult.estimatedPrice,
-      }),
-    });
+    const content = `
+Neue Buchungsanfrage
 
-    if (!response.ok) {
+Abholort: ${pickupText}
+Zielort: ${destinationText}
+Datum/Uhrzeit: ${dateTime || "Nicht angegeben"}
+Kunden E-Mail: ${customerEmail || "Nicht angegeben"}
+Kunden Telefon: ${customerPhone || "Nicht angegeben"}
+Fahrzeug: ${selectedCar.name}
+Preis pro km: CHF ${selectedCar.ratePerKm.toFixed(2)}
+Distanz: ${routeResult.distanceKm.toFixed(2)} km
+Fahrzeit: ${routeResult.durationMin.toFixed(0)} min
+Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
+`;
+
+    const formData = new FormData();
+    formData.append("access_key", "e549531d-071d-4fb4-b851-ca1854aa3802");
+    formData.append("subject", "Neue Fahrtanfrage - Swiss Prime Lane");
+    formData.append("from_name", "Swiss Prime Lane Website");
+    formData.append("name", customerEmail);
+    formData.append("email", customerEmail);
+    formData.append("phone", customerPhone);
+    formData.append("Abholort", pickupText);
+    formData.append("Zielort", destinationText);
+    formData.append("Datum/Uhrzeit", dateTime || "Nicht angegeben");
+    formData.append("Kunden E-Mail", customerEmail || "Nicht angegeben");
+    formData.append("Kunden Telefon", customerPhone || "Nicht angegeben");
+    formData.append("Fahrzeug", selectedCar.name);
+    formData.append("Preis pro km", `CHF ${selectedCar.ratePerKm.toFixed(2)}`);
+    formData.append("Distanz", `${routeResult.distanceKm.toFixed(2)} km`);
+    formData.append("Fahrzeit", `${routeResult.durationMin.toFixed(0)} min`);
+    formData.append("Geschatzter Preis", `CHF ${routeResult.estimatedPrice.toFixed(2)}`);
+    formData.append("message", content);
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+      const data = (await response.json()) as { success?: boolean };
+
+      if (!response.ok || !data.success) {
+        setBookingMessage(
+          language === "de"
+            ? "Buchung konnte nicht gesendet werden. Bitte erneut versuchen."
+            : "Booking request could not be sent. Please try again."
+        );
+        return;
+      }
+    } catch {
       setBookingMessage(
         language === "de"
           ? "Buchung konnte nicht gesendet werden. Bitte erneut versuchen."
@@ -312,7 +344,7 @@ export function BookingSection({ language }: BookingSectionProps) {
 
   return (
     <section id="booking" className="section-shell">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_1fr]">
+      <div className="mx-auto max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -331,6 +363,18 @@ export function BookingSection({ language }: BookingSectionProps) {
               </>
             )}
           </h2>
+
+          <div className="mt-6">
+            <MapPicker
+              language={language}
+              activeField={activeField}
+              pickup={pickup}
+              destination={destination}
+              onActiveFieldChange={setActiveField}
+              onSelectAddress={handleSelectMapAddress}
+              onSelectPoint={handleSelectPoint}
+            />
+          </div>
 
           <div ref={formRef} className="mt-6 space-y-4">
             <div className="relative">
@@ -488,23 +532,6 @@ export function BookingSection({ language }: BookingSectionProps) {
               </p>
             </div>
           ) : null}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ delay: 0.12 }}
-        >
-          <MapPicker
-            language={language}
-            activeField={activeField}
-            pickup={pickup}
-            destination={destination}
-            onActiveFieldChange={setActiveField}
-            onSelectAddress={handleSelectMapAddress}
-            onSelectPoint={handleSelectPoint}
-          />
         </motion.div>
       </div>
     </section>
