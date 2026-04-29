@@ -49,7 +49,7 @@ const fleet = [
     ],
   },
   {
-    name: "Toyota Prius Plus",
+    name: "Toyota Prius Plus Hybrid",
     de: "Zuverlassig und umweltfreundlich",
     en: "Reliable and eco-friendly",
     image:
