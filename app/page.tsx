@@ -7,6 +7,7 @@ import { ContactSection } from "@/components/ContactSection";
 import { FleetSection } from "@/components/FleetSection";
 import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/HeroSection";
+import { PaymentSection } from "@/components/PaymentSection";
 import { Language } from "@/types/language";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
@@ -81,6 +82,9 @@ export default function Home() {
             <a href="#booking" className="hover:text-white">
               {language === "de" ? "Buchung" : "Booking"}
             </a>
+            <a href="#payments" className="hover:text-white">
+              {language === "de" ? "Zahlung" : "Payment"}
+            </a>
             <a href="#contact" className="hover:text-white">
               {language === "de" ? "Kontakt" : "Contact"}
             </a>
@@ -125,6 +129,7 @@ export default function Home() {
           <FleetSection language={language} />
           <ChauffeursSection language={language} />
           <BookingSection language={language} />
+          <PaymentSection language={language} />
           <ContactSection language={language} />
           <Footer language={language} />
         </div>
