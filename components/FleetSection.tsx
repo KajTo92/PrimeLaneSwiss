@@ -7,32 +7,32 @@ import { Language } from "@/types/language";
 const fleet = [
   {
     name: "Tesla Model X",
-    de: "Luxurioses Elektro-SUV mit maximalem Komfort. 2CHF/km / max 150km",
-    en: "Luxury electric SUV, premium comfort. 3CHF/km / max 250km",
+    de: "Luxurioses Elektro-SUV mit maximalem Komfort.",
+    en: "Luxury electric SUV, premium comfort.",
     image:
       "/media/modelx.png",
     chauffeurs: [{ name: "Peter", avatar: "/media/szoferavatar1.png" }],
   },
   {
     name: "Tesla Model S",
-    de: "Luxurioses Elektro-SUV mit maximalem Komfort. 3CHF/km / max 300km",
-    en: "Luxury electric SUV, premium comfort. 2CHF/km / max 300km",
+    de: "Luxurioses Elektro-SUV mit maximalem Komfort.",
+    en: "Luxury electric SUV, premium comfort.",
     image:
       "/media/teslas.jpg",
     chauffeurs: [{ name: "Martin", avatar: "/media/szoferavatar4.png" }],
   },
   {
     name: "Tesla Model Y",
-    de: "Modern, effizient und komfortabel fur jede Strecke. 2CHF/km / max 400km",
-    en: "Modern, efficient, and comfortable. 3CHF/km / max 400km",
+    de: "Modern, effizient und komfortabel fur jede Strecke.",
+    en: "Modern, efficient, and comfortable.",
     image:
       "/media/modely.png",
     chauffeurs: [{ name: "Jan", avatar: "/media/szoferavatar3.png" }],
   },
   {
     name: "Mercedes V-Class",
-    de: "Maximum komfort und platz fur 7 personen. 3CHF/km / max 400km",
-    en: "Maximum comfort and space for 7 people. 3CHF/km / max 400km",
+    de: "Maximum komfort und platz fur 7 personen.",
+    en: "Maximum comfort and space for 7 people.",
     image:
       "/media/vclass.jpg",
     chauffeurs: [{ name: "Martin", avatar: "/media/szoferavatar4.png" }],

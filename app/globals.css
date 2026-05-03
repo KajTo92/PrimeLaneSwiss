@@ -340,6 +340,37 @@ body::before {
   border-color: rgba(255, 255, 255, 0.45);
 }
 
+.spacecode-credit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 2rem;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.spacecode-credit:hover {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.spacecode-logo-image {
+  height: auto;
+  width: 6.9rem;
+  opacity: 0.92;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.spacecode-credit:hover .spacecode-logo-image {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
 @media (max-width: 768px) {
   .after-hero-background-image {
     background-position: center top !important;

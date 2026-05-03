@@ -18,12 +18,18 @@ type RouteResult = {
   distanceKm: number;
   durationMin: number;
   estimatedPrice: number;
+  ratePerKm: number;
 };
 
 type CarOption = {
-  id: "tesla-x" | "tesla-y" | "mercedes-v-class" | "prius";
+  id: "tesla-x" | "tesla-y" | "tesla-s" | "mercedes-v-class" | "prius-plus" | "prius-plus-hybrid";
   name: string;
-  ratePerKm: number;
+  rates: {
+    upTo50: number;
+    upTo100: number;
+    upTo200: number;
+    over200: number;
+  };
 };
 
 const MapPicker = dynamic(() => import("@/components/MapPicker").then((module) => module.MapPicker), {
@@ -33,12 +39,82 @@ const MapPicker = dynamic(() => import("@/components/MapPicker").then((module) =
 const toCoordString = (coords: Coordinates | null) =>
   coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : "";
 
+const priusRates: CarOption["rates"] = {
+  upTo50: 1.5,
+  upTo100: 1.3,
+  upTo200: 1.1,
+  over200: 1,
+};
+
+const teslaRates: CarOption["rates"] = {
+  upTo50: 3,
+  upTo100: 2,
+  upTo200: 1.5,
+  over200: 1.3,
+};
+
+const mercedesRates: CarOption["rates"] = {
+  upTo50: 3.5,
+  upTo100: 2.5,
+  upTo200: 1.7,
+  over200: 1.3,
+};
+
 const carOptions: CarOption[] = [
-  { id: "tesla-x", name: "Tesla X", ratePerKm: 3 },
-  { id: "tesla-y", name: "Tesla Y", ratePerKm: 3 },
-  { id: "mercedes-v-class", name: "Mercedes V-Class", ratePerKm: 3 },
-  { id: "prius", name: "Toyota Prius", ratePerKm: 1.5 },
+  { id: "tesla-x", name: "Tesla X", rates: teslaRates },
+  { id: "tesla-y", name: "Tesla Y", rates: teslaRates },
+  { id: "tesla-s", name: "Tesla S", rates: teslaRates },
+  { id: "mercedes-v-class", name: "Mercedes V-Class", rates: mercedesRates },
+  { id: "prius-plus", name: "Toyota Prius Plus", rates: priusRates },
+  { id: "prius-plus-hybrid", name: "Toyota Prius Plus Hybrid", rates: priusRates },
 ];
+
+const getRateForDistance = (distanceKm: number, car: CarOption) => {
+  if (distanceKm <= 50) {
+    return car.rates.upTo50;
+  }
+  if (distanceKm <= 100) {
+    return car.rates.upTo100;
+  }
+  if (distanceKm <= 200) {
+    return car.rates.upTo200;
+  }
+  return car.rates.over200;
+};
+
+const calculateEstimatedPrice = (distanceKm: number, car: CarOption) => {
+  const ratePerKm = getRateForDistance(distanceKm, car);
+
+  return {
+    ratePerKm,
+    estimatedPrice: distanceKm * ratePerKm,
+  };
+};
+
+const formatChfRate = (rate: number) => rate.toFixed(2).replace(/\.?0+$/, "");
+
+const getRateLabel = (distanceKm: number, language: Language) => {
+  if (distanceKm <= 50) {
+    return "0-50 km";
+  }
+  if (distanceKm <= 100) {
+    return "51-100 km";
+  }
+  if (distanceKm <= 200) {
+    return "101-200 km";
+  }
+
+  return language === "de" ? "uber 200 km" : "over 200 km";
+};
+
+const getRouteInfoText = (result: RouteResult, language: Language) =>
+  language === "de"
+    ? `Distanz: ${result.distanceKm.toFixed(1)} km · Dauer: ${result.durationMin.toFixed(
+        0
+      )} min · Preis: CHF ${result.estimatedPrice.toFixed(2)}`
+    : `Distance: ${result.distanceKm.toFixed(1)} km · Duration: ${result.durationMin.toFixed(
+        0
+      )} min · Price: CHF ${result.estimatedPrice.toFixed(2)}`;
 
 type BookingSectionProps = {
   language: Language;
@@ -142,16 +218,23 @@ export function BookingSection({ language }: BookingSectionProps) {
   }, [destinationText, language]);
 
   useEffect(() => {
-    setRouteResult((current) => {
-      if (!current) {
-        return current;
-      }
-      return {
-        ...current,
-        estimatedPrice: current.distanceKm * selectedCar.ratePerKm,
-      };
-    });
-  }, [selectedCar.ratePerKm]);
+    if (!routeResult) {
+      return;
+    }
+
+    const { estimatedPrice, ratePerKm } = calculateEstimatedPrice(routeResult.distanceKm, selectedCar);
+    const nextRouteResult = {
+      ...routeResult,
+      estimatedPrice,
+      ratePerKm,
+    };
+
+    if (estimatedPrice !== routeResult.estimatedPrice || ratePerKm !== routeResult.ratePerKm) {
+      setRouteResult(nextRouteResult);
+    }
+
+    setRouteInfo(getRouteInfoText(nextRouteResult, language));
+  }, [selectedCar, language, routeResult]);
 
   const handleSelectPoint = (coords: Coordinates) => {
     if (activeField === "pickup") {
@@ -226,22 +309,15 @@ export function BookingSection({ language }: BookingSectionProps) {
         distanceKm: number;
         durationMin: number;
       };
-      const estimatedPrice = data.distanceKm * selectedCar.ratePerKm;
+      const { estimatedPrice, ratePerKm } = calculateEstimatedPrice(data.distanceKm, selectedCar);
       const result: RouteResult = {
         distanceKm: data.distanceKm,
         durationMin: data.durationMin,
         estimatedPrice,
+        ratePerKm,
       };
       setRouteResult(result);
-      setRouteInfo(
-        language === "de"
-          ? `Distanz: ${result.distanceKm.toFixed(1)} km · Dauer: ${result.durationMin.toFixed(
-              0
-            )} min · Preis: CHF ${result.estimatedPrice.toFixed(2)}`
-          : `Distance: ${result.distanceKm.toFixed(1)} km · Duration: ${result.durationMin.toFixed(
-              0
-            )} min · Price: CHF ${result.estimatedPrice.toFixed(2)}`
-      );
+      setRouteInfo(getRouteInfoText(result, language));
       setBookingMessage("");
     } catch {
       setRouteResult(null);
@@ -281,7 +357,8 @@ Datum/Uhrzeit: ${dateTime || "Nicht angegeben"}
 Kunden E-Mail: ${customerEmail || "Nicht angegeben"}
 Kunden Telefon: ${customerPhone || "Nicht angegeben"}
 Fahrzeug: ${selectedCar.name}
-Preis pro km: CHF ${selectedCar.ratePerKm.toFixed(2)}
+Tarifbereich: ${getRateLabel(routeResult.distanceKm, language)}
+Preis pro km: CHF ${routeResult.ratePerKm.toFixed(2)}
 Distanz: ${routeResult.distanceKm.toFixed(2)} km
 Fahrzeit: ${routeResult.durationMin.toFixed(0)} min
 Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
@@ -300,7 +377,8 @@ Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
     formData.append("Kunden E-Mail", customerEmail || "Nicht angegeben");
     formData.append("Kunden Telefon", customerPhone || "Nicht angegeben");
     formData.append("Fahrzeug", selectedCar.name);
-    formData.append("Preis pro km", `CHF ${selectedCar.ratePerKm.toFixed(2)}`);
+    formData.append("Tarifbereich", getRateLabel(routeResult.distanceKm, language));
+    formData.append("Preis pro km", `CHF ${routeResult.ratePerKm.toFixed(2)}`);
     formData.append("Distanz", `${routeResult.distanceKm.toFixed(2)} km`);
     formData.append("Fahrzeit", `${routeResult.durationMin.toFixed(0)} min`);
     formData.append("Geschatzter Preis", `CHF ${routeResult.estimatedPrice.toFixed(2)}`);
@@ -489,14 +567,15 @@ Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
                   >
                     <span className="vehicle-dot" />
                     <span className="text-sm font-medium text-white">{car.name}</span>
-                    <span className="text-xs text-white/70">CHF {car.ratePerKm.toFixed(1)} / km</span>
+                    <span className="text-xs text-white/70">
+                      {language === "de" ? "Distanzabhangiger Tarif" : "Distance-based tariff"}
+                    </span>
                   </button>
                 ))}
               </div>
               <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/45 bg-amber-300/20 px-4 py-2 text-sm font-semibold text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.25)]">
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
-                {language === "de" ? "Gewahlt" : "Selected"}: {selectedCar.name} (CHF{" "}
-                {selectedCar.ratePerKm.toFixed(1)} / km)
+                {language === "de" ? "Gewahlt" : "Selected"}: {selectedCar.name}
               </div>
             </div>
           </div>
@@ -517,8 +596,8 @@ Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
             <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/80">
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/45 bg-amber-300/20 px-3 py-1.5 text-xs font-semibold text-amber-100">
                 <span className="h-2 w-2 rounded-full bg-amber-300" />
-                {language === "de" ? "Tarif" : "Tariff"}: {selectedCar.name} · CHF{" "}
-                {selectedCar.ratePerKm.toFixed(1)} / km
+                {language === "de" ? "Tarif" : "Tariff"}: {selectedCar.name} ·{" "}
+                {getRateLabel(routeResult.distanceKm, language)} · CHF {formatChfRate(routeResult.ratePerKm)} / km
               </div>
               <p>
                 {language === "de" ? "Distanz" : "Distance"}: {routeResult.distanceKm.toFixed(2)} km
