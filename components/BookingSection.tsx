@@ -19,11 +19,13 @@ type RouteResult = {
   durationMin: number;
   estimatedPrice: number;
   ratePerKm: number;
+  startFee: number;
 };
 
 type CarOption = {
   id: "tesla-x" | "tesla-y" | "tesla-s" | "mercedes-v-class" | "prius-plus" | "prius-plus-hybrid";
   name: string;
+  startFee: number;
   rates: {
     upTo50: number;
     upTo100: number;
@@ -61,12 +63,12 @@ const mercedesRates: CarOption["rates"] = {
 };
 
 const carOptions: CarOption[] = [
-  { id: "tesla-x", name: "Tesla X", rates: teslaRates },
-  { id: "tesla-y", name: "Tesla Y", rates: teslaRates },
-  { id: "tesla-s", name: "Tesla S", rates: teslaRates },
-  { id: "mercedes-v-class", name: "Mercedes V-Class", rates: mercedesRates },
-  { id: "prius-plus", name: "Toyota Prius Plus", rates: priusRates },
-  { id: "prius-plus-hybrid", name: "Toyota Prius Plus Hybrid", rates: priusRates },
+  { id: "tesla-x", name: "Tesla X", startFee: 10, rates: teslaRates },
+  { id: "tesla-y", name: "Tesla Y", startFee: 10, rates: teslaRates },
+  { id: "tesla-s", name: "Tesla S", startFee: 10, rates: teslaRates },
+  { id: "mercedes-v-class", name: "Mercedes V-Class", startFee: 15, rates: mercedesRates },
+  { id: "prius-plus", name: "Toyota Prius Plus", startFee: 7, rates: priusRates },
+  { id: "prius-plus-hybrid", name: "Toyota Prius Plus Hybrid", startFee: 7, rates: priusRates },
 ];
 
 const getRateForDistance = (distanceKm: number, car: CarOption) => {
@@ -87,7 +89,8 @@ const calculateEstimatedPrice = (distanceKm: number, car: CarOption) => {
 
   return {
     ratePerKm,
-    estimatedPrice: distanceKm * ratePerKm,
+    startFee: car.startFee,
+    estimatedPrice: distanceKm * ratePerKm + car.startFee,
   };
 };
 
@@ -222,14 +225,19 @@ export function BookingSection({ language }: BookingSectionProps) {
       return;
     }
 
-    const { estimatedPrice, ratePerKm } = calculateEstimatedPrice(routeResult.distanceKm, selectedCar);
+    const { estimatedPrice, ratePerKm, startFee } = calculateEstimatedPrice(routeResult.distanceKm, selectedCar);
     const nextRouteResult = {
       ...routeResult,
       estimatedPrice,
       ratePerKm,
+      startFee,
     };
 
-    if (estimatedPrice !== routeResult.estimatedPrice || ratePerKm !== routeResult.ratePerKm) {
+    if (
+      estimatedPrice !== routeResult.estimatedPrice ||
+      ratePerKm !== routeResult.ratePerKm ||
+      startFee !== routeResult.startFee
+    ) {
       setRouteResult(nextRouteResult);
     }
 
@@ -309,12 +317,13 @@ export function BookingSection({ language }: BookingSectionProps) {
         distanceKm: number;
         durationMin: number;
       };
-      const { estimatedPrice, ratePerKm } = calculateEstimatedPrice(data.distanceKm, selectedCar);
+      const { estimatedPrice, ratePerKm, startFee } = calculateEstimatedPrice(data.distanceKm, selectedCar);
       const result: RouteResult = {
         distanceKm: data.distanceKm,
         durationMin: data.durationMin,
         estimatedPrice,
         ratePerKm,
+        startFee,
       };
       setRouteResult(result);
       setRouteInfo(getRouteInfoText(result, language));
@@ -359,6 +368,7 @@ Kunden Telefon: ${customerPhone || "Nicht angegeben"}
 Fahrzeug: ${selectedCar.name}
 Tarifbereich: ${getRateLabel(routeResult.distanceKm, language)}
 Preis pro km: CHF ${routeResult.ratePerKm.toFixed(2)}
+Startgebuhr: CHF ${routeResult.startFee.toFixed(2)}
 Distanz: ${routeResult.distanceKm.toFixed(2)} km
 Fahrzeit: ${routeResult.durationMin.toFixed(0)} min
 Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
@@ -379,6 +389,7 @@ Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
     formData.append("Fahrzeug", selectedCar.name);
     formData.append("Tarifbereich", getRateLabel(routeResult.distanceKm, language));
     formData.append("Preis pro km", `CHF ${routeResult.ratePerKm.toFixed(2)}`);
+    formData.append("Startgebuhr", `CHF ${routeResult.startFee.toFixed(2)}`);
     formData.append("Distanz", `${routeResult.distanceKm.toFixed(2)} km`);
     formData.append("Fahrzeit", `${routeResult.durationMin.toFixed(0)} min`);
     formData.append("Geschatzter Preis", `CHF ${routeResult.estimatedPrice.toFixed(2)}`);
@@ -588,6 +599,16 @@ Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
               {language === "de" ? "Jetzt buchen" : "Book Now"}
             </button>
           </div>
+          <p className="mt-3 max-w-3xl text-xs leading-relaxed text-white/60">
+            {language === "de"
+              ? "Nach dem Klick auf Jetzt buchen prufen wir Ihre Anfrage und senden Ihnen einen Link fur die schnelle Zahlung der Fahrt."
+              : "After clicking Book Now, we will review your request and send you a link for quick payment for the ride."}
+          </p>
+          <p className="mt-3 max-w-3xl text-xs leading-relaxed text-white/55">
+            {language === "de"
+              ? "Falls das von Ihnen gewahlte Fahrzeug nicht verfugbar ist, wird Ihnen ein anderes Fahrzeug mit vergleichbarem Komfort zugeteilt."
+              : "If the vehicle you selected is unavailable, another vehicle with comparable comfort will be assigned to you."}
+          </p>
 
           {routeInfo ? <p className="mt-4 text-sm text-white/75">{routeInfo}</p> : null}
           {bookingMessage ? <p className="mt-2 rounded-xl bg-emerald-500/15 p-3 text-sm text-emerald-200">{bookingMessage}</p> : null}
@@ -604,6 +625,9 @@ Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
               </p>
               <p>
                 {language === "de" ? "Fahrzeit" : "Travel time"}: {routeResult.durationMin.toFixed(0)} min
+              </p>
+              <p>
+                {language === "de" ? "Startgebuhr" : "Starting fee"}: CHF {routeResult.startFee.toFixed(2)}
               </p>
               <p>
                 {language === "de" ? "Geschatzter Preis" : "Estimated price"}: CHF{" "}
