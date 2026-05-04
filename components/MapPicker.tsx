@@ -67,10 +67,15 @@ export function MapPicker({
 }: MapPickerProps) {
   const mapCenter = useMemo<[number, number]>(() => [46.8182, 8.2275], []);
   const activePoint = activeField === "pickup" ? pickup : destination;
+  const [mapKey, setMapKey] = useState(0);
   const [searchText, setSearchText] = useState("");
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const skipSearchRef = useRef(false);
+
+  useEffect(() => {
+    setMapKey(Date.now());
+  }, []);
 
   useEffect(() => {
     setSearchText("");
@@ -167,7 +172,7 @@ export function MapPicker({
           ) : null}
         </div>
       </div>
-      <MapContainer center={mapCenter} zoom={8} scrollWheelZoom className="relative z-0 h-80 w-full">
+      <MapContainer key={mapKey} center={mapCenter} zoom={8} scrollWheelZoom className="relative z-0 h-80 w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

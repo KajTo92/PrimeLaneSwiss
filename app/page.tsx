@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { AboutSection } from "@/components/AboutSection";
 import { BookingSection } from "@/components/BookingSection";
 import { ChauffeursSection } from "@/components/ChauffeursSection";
@@ -29,19 +30,33 @@ export default function Home() {
   };
   const [cursorOffset, setCursorOffset] = useState({ x: 0, y: 0 });
   const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const contactMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const navItems = [
+    { href: "#about", label: language === "de" ? "Uber uns" : "About" },
+    { href: "#fleet", label: language === "de" ? "Flotte" : "Fleet" },
+    { href: "#booking", label: language === "de" ? "Buchung" : "Booking" },
+    { href: "#payments", label: language === "de" ? "Zahlung" : "Payment" },
+    { href: "#contact", label: language === "de" ? "Kontakt" : "Contact" },
+  ];
 
   useEffect(() => {
-    if (!isContactMenuOpen) {
+    if (!isContactMenuOpen && !isMobileMenuOpen) {
       return;
     }
 
     const handleClickOutside = (event: globalThis.MouseEvent | TouchEvent) => {
-      if (!contactMenuRef.current || contactMenuRef.current.contains(event.target as Node)) {
-        return;
+      const target = event.target as Node;
+
+      if (isContactMenuOpen && contactMenuRef.current && !contactMenuRef.current.contains(target)) {
+        setIsContactMenuOpen(false);
       }
 
-      setIsContactMenuOpen(false);
+      if (isMobileMenuOpen && mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
+        setIsMobileMenuOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -51,7 +66,23 @@ export default function Home() {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
     };
-  }, [isContactMenuOpen]);
+  }, [isContactMenuOpen, isMobileMenuOpen]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      return;
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth > 980) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isMobileMenuOpen]);
 
   const handleAfterHeroMouseMove = (event: MouseEvent<HTMLElement>) => {
     const { innerWidth, innerHeight } = window;
@@ -72,24 +103,14 @@ export default function Home() {
              <span className="gold-text block sm:inline">PRIME LANE</span>{" "}
              <span className="block text-[0.52em] tracking-[0.38em] text-white/70 sm:inline sm:align-middle">GMBH SWISS</span>
           </a>
-          <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
-            <a href="#about" className="hover:text-white">
-              {language === "de" ? "Uber uns" : "About"}
-            </a>
-            <a href="#fleet" className="hover:text-white">
-              {language === "de" ? "Flotte" : "Fleet"}
-            </a>
-            <a href="#booking" className="hover:text-white">
-              {language === "de" ? "Buchung" : "Booking"}
-            </a>
-            <a href="#payments" className="hover:text-white">
-              {language === "de" ? "Zahlung" : "Payment"}
-            </a>
-            <a href="#contact" className="hover:text-white">
-              {language === "de" ? "Kontakt" : "Contact"}
-            </a>
+          <nav className="hidden items-center gap-8 text-sm text-white/70 min-[981px]:flex">
+            {navItems.map((item) => (
+              <a key={item.href} href={item.href} className="hover:text-white">
+                {item.label}
+              </a>
+            ))}
           </nav>
-          <div className="flex items-center gap-2">
+          <div ref={mobileMenuRef} className="relative flex items-center gap-2">
             <button
               type="button"
               onClick={() => switchLanguage("de")}
@@ -104,9 +125,42 @@ export default function Home() {
             >
               EN
             </button>
-            <a href="#booking" className="btn-premium nav-booking-button">
+            <a href="#booking" className="btn-premium nav-booking-button desktop-booking-button">
               {language === "de" ? "Fahrt buchen" : "Book Now"}
             </a>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((current) => !current)}
+              aria-expanded={isMobileMenuOpen}
+              aria-label={language === "de" ? "Menu offnen" : "Open menu"}
+              className="inline-flex h-16 w-24 items-center justify-center bg-transparent p-0 transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d88b] min-[981px]:hidden"
+            >
+              <Image
+                src="/media/burger.png"
+                alt=""
+                aria-hidden="true"
+                width={88}
+                height={40}
+                className="object-contain"
+                style={{ width: "88px", height: "40px", maxHeight: "64px" }}
+              />
+            </button>
+            {isMobileMenuOpen ? (
+              <div className="absolute right-0 top-[calc(100%+0.85rem)] w-[min(82vw,20rem)] overflow-hidden rounded-2xl border border-[#d4a94b]/35 bg-[#070606]/95 p-2 text-sm text-white shadow-[0_22px_70px_rgba(0,0,0,0.55),0_0_34px_rgba(214,166,78,0.18)] backdrop-blur-xl min-[981px]:hidden">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f6d88b]/80 to-transparent" />
+                {navItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="group flex items-center justify-between rounded-xl px-4 py-3 text-white/78 transition hover:bg-[#d4a94b]/12 hover:text-[#f9dfac]"
+                  >
+                    <span>{item.label}</span>
+                    <span className="h-px w-7 bg-gradient-to-r from-[#d4a94b]/30 to-transparent transition group-hover:from-[#f6d88b]" />
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
