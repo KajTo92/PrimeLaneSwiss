@@ -8,6 +8,7 @@ type PaymentSectionProps = {
 };
 
 const iban = "CH240020720711395901A";
+const bic = "UBSWCHZH80A";
 
 export function PaymentSection({ language }: PaymentSectionProps) {
   return (
@@ -40,6 +41,9 @@ export function PaymentSection({ language }: PaymentSectionProps) {
               <p className="mt-4 text-sm text-white/58">UBS Bankverbindung</p>
               <p className="mt-2 break-all font-mono text-lg font-semibold tracking-[0.08em] text-white sm:text-xl">
                 {iban}
+              </p>
+              <p className="mt-3 text-sm font-semibold uppercase tracking-[0.16em] text-white/72">
+                BIC = {bic}
               </p>
             </div>
           </div>
