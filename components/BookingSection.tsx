@@ -1,641 +1,794 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Language } from "@/types/language";
-
-type Coordinates = {
-  lat: number;
-  lng: number;
-};
-
-type LocationSuggestion = Coordinates & {
-  label: string;
-};
-
-type RouteResult = {
-  distanceKm: number;
-  durationMin: number;
-  estimatedPrice: number;
-  ratePerKm: number;
-  startFee: number;
-};
-
-type CarOption = {
-  id: "tesla-x" | "tesla-y" | "tesla-s" | "mercedes-v-class" | "prius-plus" | "prius-plus-hybrid";
-  name: string;
-  startFee: number;
-  rates: {
-    upTo50: number;
-    upTo100: number;
-    upTo200: number;
-    over200: number;
-  };
-};
-
-const MapPicker = dynamic(() => import("@/components/MapPicker").then((module) => module.MapPicker), {
-  ssr: false,
-});
-
-const toCoordString = (coords: Coordinates | null) =>
-  coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : "";
-
-const priusRates: CarOption["rates"] = {
-  upTo50: 1.5,
-  upTo100: 1.3,
-  upTo200: 1.1,
-  over200: 1,
-};
-
-const teslaRates: CarOption["rates"] = {
-  upTo50: 3,
-  upTo100: 2,
-  upTo200: 1.5,
-  over200: 1.3,
-};
-
-const mercedesRates: CarOption["rates"] = {
-  upTo50: 3.5,
-  upTo100: 2.5,
-  upTo200: 1.7,
-  over200: 1.3,
-};
-
-const carOptions: CarOption[] = [
-  { id: "tesla-x", name: "Tesla X", startFee: 10, rates: teslaRates },
-  { id: "tesla-y", name: "Tesla Y", startFee: 10, rates: teslaRates },
-  { id: "tesla-s", name: "Tesla S", startFee: 10, rates: teslaRates },
-  { id: "mercedes-v-class", name: "Mercedes V-Class", startFee: 15, rates: mercedesRates },
-  { id: "prius-plus", name: "Toyota Prius Plus", startFee: 7, rates: priusRates },
-  { id: "prius-plus-hybrid", name: "Toyota Prius Plus Hybrid", startFee: 7, rates: priusRates },
-];
-
-const getRateForDistance = (distanceKm: number, car: CarOption) => {
-  if (distanceKm <= 50) {
-    return car.rates.upTo50;
-  }
-  if (distanceKm <= 100) {
-    return car.rates.upTo100;
-  }
-  if (distanceKm <= 200) {
-    return car.rates.upTo200;
-  }
-  return car.rates.over200;
-};
-
-const calculateEstimatedPrice = (distanceKm: number, car: CarOption) => {
-  const ratePerKm = getRateForDistance(distanceKm, car);
-
-  return {
-    ratePerKm,
-    startFee: car.startFee,
-    estimatedPrice: distanceKm * ratePerKm + car.startFee,
-  };
-};
-
-const formatChfRate = (rate: number) => rate.toFixed(2).replace(/\.?0+$/, "");
-
-const getRateLabel = (distanceKm: number, language: Language) => {
-  if (distanceKm <= 50) {
-    return "0-50 km";
-  }
-  if (distanceKm <= 100) {
-    return "51-100 km";
-  }
-  if (distanceKm <= 200) {
-    return "101-200 km";
-  }
-
-  return language === "de" ? "uber 200 km" : "over 200 km";
-};
-
-const getRouteInfoText = (result: RouteResult, language: Language) =>
-  language === "de"
-    ? `Distanz: ${result.distanceKm.toFixed(1)} km · Dauer: ${result.durationMin.toFixed(
-        0
-      )} min · Preis: CHF ${result.estimatedPrice.toFixed(2)}`
-    : `Distance: ${result.distanceKm.toFixed(1)} km · Duration: ${result.durationMin.toFixed(
-        0
-      )} min · Price: CHF ${result.estimatedPrice.toFixed(2)}`;
 
 type BookingSectionProps = {
   language: Language;
 };
 
-export function BookingSection({ language }: BookingSectionProps) {
-  const formRef = useRef<HTMLDivElement | null>(null);
-  const [pickupText, setPickupText] = useState("");
-  const [destinationText, setDestinationText] = useState("");
-  const [pickup, setPickup] = useState<Coordinates | null>(null);
-  const [destination, setDestination] = useState<Coordinates | null>(null);
-  const [pickupSuggestions, setPickupSuggestions] = useState<LocationSuggestion[]>([]);
-  const [destinationSuggestions, setDestinationSuggestions] = useState<LocationSuggestion[]>([]);
-  const [isPickupLoading, setIsPickupLoading] = useState(false);
-  const [isDestinationLoading, setIsDestinationLoading] = useState(false);
-  const [activeField, setActiveField] = useState<"pickup" | "destination">("pickup");
-  const [selectedCarId, setSelectedCarId] = useState<CarOption["id"]>("tesla-x");
-  const [dateTime, setDateTime] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [routeInfo, setRouteInfo] = useState<string>("");
-  const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
-  const [bookingMessage, setBookingMessage] = useState<string>("");
+type TranslationKey =
+  | "eyebrow"
+  | "headline"
+  | "pickupLabel"
+  | "pickupPlaceholder"
+  | "destinationLabel"
+  | "destinationPlaceholder"
+  | "calculateButton"
+  | "distance"
+  | "duration"
+  | "price"
+  | "whatsappButton"
+  | "emailButton"
+  | "emailSubject"
+  | "nameLabel"
+  | "namePlaceholder"
+  | "telephoneLabel"
+  | "telephonePlaceholder"
+  | "routeNote"
+  | "calculating"
+  | "calculated"
+  | "geocodeError"
+  | "missingRoute"
+  | "missingContact"
+  | "searchingPlaces"
+  | "noPlaces"
+  | "notCalculated"
+  | "onRequest"
+  | "selectVehicle"
+  | "selectedVehicle"
+  | "passengersLabel"
+  | "passengersPlaceholder"
+  | "luggageLabel"
+  | "luggagePlaceholder"
+  | "vehicleAvailabilityNote";
 
-  const skipPickupQueryRef = useRef(false);
-  const skipDestinationQueryRef = useRef(false);
+type PhotonFeature = {
+  geometry: {
+    coordinates: [number, number];
+  };
+  properties?: {
+    name?: string;
+    street?: string;
+    housenumber?: string;
+    postcode?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    countrycode?: string;
+  };
+};
+
+type RouteResult = {
+  pickup: string;
+  destination: string;
+  distanceKm: number | null;
+  durationSeconds: number | null;
+};
+
+type CarOption = {
+  id: "tesla-s" | "tesla-x" | "tesla-y" | "mercedes-v-class" | "toyota-prius-plus";
+  name: string;
+  startFee: number;
+  upTo20Rate: number;
+  over20Rate: number;
+};
+
+type IconName = "map-pin" | "flag" | "route" | "swap" | "user" | "phone" | "message" | "mail";
+
+const WHATSAPP_NUMBER = "41772037643";
+const INQUIRY_EMAIL = "Primelaneswiss@gmail.com";
+const SHORT_DISTANCE_LIMIT_KM = 20;
+const AUTOCOMPLETE_MIN_LENGTH = 2;
+const AUTOCOMPLETE_DEBOUNCE_MS = 220;
+
+const carOptions: CarOption[] = [
+  { id: "tesla-s", name: "Tesla Model S", startFee: 7, upTo20Rate: 3, over20Rate: 2 },
+  { id: "tesla-x", name: "Tesla Model X", startFee: 7, upTo20Rate: 3, over20Rate: 2 },
+  { id: "tesla-y", name: "Tesla Model Y", startFee: 7, upTo20Rate: 2.5, over20Rate: 1.8 },
+  { id: "mercedes-v-class", name: "Mercedes V-Class", startFee: 10, upTo20Rate: 3.4, over20Rate: 2.5 },
+  { id: "toyota-prius-plus", name: "Toyota Prius Plus", startFee: 6, upTo20Rate: 2, over20Rate: 1.5 },
+];
+
+const translations: Record<Language, Record<TranslationKey, string>> = {
+  en: {
+    eyebrow: "Private transfers in Switzerland",
+    headline: "Book your ride",
+    pickupLabel: "Pickup location",
+    pickupPlaceholder: "Zurich Airport",
+    destinationLabel: "Destination",
+    destinationPlaceholder: "St. Moritz",
+    calculateButton: "Show route and price",
+    distance: "Distance",
+    duration: "Travel time",
+    price: "Estimated price",
+    whatsappButton: "Send inquiry on WhatsApp",
+    emailButton: "Send inquiry per mail",
+    emailSubject: "Swiss Prime Lane transfer inquiry",
+    nameLabel: "Name",
+    namePlaceholder: "John Smith",
+    telephoneLabel: "Telephone number",
+    telephonePlaceholder: "+41 79 123 45 67",
+    routeNote: "Enter pickup and destination to calculate route.",
+    calculating: "Calculating route...",
+    calculated: "Estimated transfer price. Final quote will be confirmed by Swiss Prime Lane.",
+    geocodeError: "Route distance could not be calculated. You can still send the inquiry.",
+    missingRoute: "Please enter both pickup and destination.",
+    missingContact: "Please enter your name and telephone number.",
+    searchingPlaces: "Searching...",
+    noPlaces: "No matching place found",
+    notCalculated: "Not calculated",
+    onRequest: "On request",
+    selectVehicle: "Select vehicle",
+    selectedVehicle: "Selected",
+    passengersLabel: "Number of passengers",
+    passengersPlaceholder: "2",
+    luggageLabel: "Number of suitcases",
+    luggagePlaceholder: "2",
+    vehicleAvailabilityNote:
+      "If the desired vehicle is not available at the requested time, we will offer you another vehicle and send you the adjusted price.",
+  },
+  de: {
+    eyebrow: "Private Transfers in der Schweiz",
+    headline: "Fahrt buchen",
+    pickupLabel: "Abholort",
+    pickupPlaceholder: "Flughafen Zurich",
+    destinationLabel: "Zielort",
+    destinationPlaceholder: "St. Moritz",
+    calculateButton: "Route und Preis anzeigen",
+    distance: "Distanz",
+    duration: "Fahrzeit",
+    price: "Geschatzter Preis",
+    whatsappButton: "Anfrage per WhatsApp senden",
+    emailButton: "Anfrage per E-Mail senden",
+    emailSubject: "Swiss Prime Lane Transfer Anfrage",
+    nameLabel: "Name",
+    namePlaceholder: "Max Muster",
+    telephoneLabel: "Telefonnummer",
+    telephonePlaceholder: "+41 79 123 45 67",
+    routeNote: "Geben Sie Abholort und Ziel ein, um die Route zu berechnen.",
+    calculating: "Route wird berechnet...",
+    calculated: "Geschatzter Transferpreis. Das finale Angebot wird von Swiss Prime Lane bestatigt.",
+    geocodeError:
+      "Die Routendistanz konnte nicht berechnet werden. Sie konnen die Anfrage trotzdem senden.",
+    missingRoute: "Bitte geben Sie Abholort und Ziel ein.",
+    missingContact: "Bitte geben Sie Ihren Namen und Ihre Telefonnummer ein.",
+    searchingPlaces: "Suche...",
+    noPlaces: "Kein passender Ort gefunden",
+    notCalculated: "Nicht berechnet",
+    onRequest: "Auf Anfrage",
+    selectVehicle: "Fahrzeug wahlen",
+    selectedVehicle: "Gewahlt",
+    passengersLabel: "Anzahl Personen",
+    passengersPlaceholder: "2",
+    luggageLabel: "Anzahl Gepackstucke",
+    luggagePlaceholder: "2",
+    vehicleAvailabilityNote:
+      "Falls das gewunschte Fahrzeug im gewunschten Zeitraum nicht verfugbar ist, bieten wir Ihnen ein anderes Fahrzeug an und senden Ihnen den angepassten Preis zu.",
+  },
+};
+
+const iconPaths: Record<IconName, string> = {
+  "map-pin":
+    "M12 21s7-4.4 7-11a7 7 0 1 0-14 0c0 6.6 7 11 7 11Zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z",
+  flag: "M5 21V4m0 0h11l-1.5 4L16 12H5",
+  route:
+    "M4 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm16-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM7 16h3.5a3.5 3.5 0 0 0 0-7H13",
+  swap: "M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4m4 4H4",
+  user: "M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z",
+  phone:
+    "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z",
+  message:
+    "M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z",
+  mail: "M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm18 3-10 6L2 7",
+};
+
+const Icon = ({ name }: { name: IconName }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="spdrive-icon">
+    <path d={iconPaths[name]} />
+  </svg>
+);
+
+const calculatePrice = (distanceKm: number, car: CarOption) => {
+  const rate = distanceKm <= SHORT_DISTANCE_LIMIT_KM ? car.upTo20Rate : car.over20Rate;
+  return car.startFee + distanceKm * rate;
+};
+
+const getRouteMapZoom = (distanceKm?: number | null) => {
+  if (!distanceKm) {
+    return 8;
+  }
+  if (distanceKm <= 20) {
+    return 11;
+  }
+  if (distanceKm <= 80) {
+    return 9;
+  }
+  if (distanceKm <= 200) {
+    return 8;
+  }
+  if (distanceKm <= 400) {
+    return 7;
+  }
+  return 6;
+};
+
+const getGoogleMapsRouteSrc = (pickup: string, destination: string, distanceKm?: number | null) => {
+  if (!pickup || !destination) {
+    return "https://www.google.com/maps?output=embed&q=Switzerland";
+  }
+
+  const url = new URL("https://www.google.com/maps");
+  url.searchParams.set("output", "embed");
+  url.searchParams.set("f", "d");
+  url.searchParams.set("source", "s_d");
+  url.searchParams.set("saddr", pickup);
+  url.searchParams.set("daddr", destination);
+  url.searchParams.set("dirflg", "d");
+  url.searchParams.set("z", String(getRouteMapZoom(distanceKm)));
+  return url.toString();
+};
+
+const getPhotonUrl = (query: string, language: Language, limit = 5) => {
+  const url = new URL("https://photon.komoot.io/api/");
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("lang", language);
+  url.searchParams.set("q", `${query}, Switzerland`);
+  return url;
+};
+
+const getPlaceTitle = (properties: PhotonFeature["properties"] = {}) =>
+  properties.name ||
+  [properties.street, properties.housenumber].filter(Boolean).join(" ") ||
+  properties.city ||
+  properties.postcode ||
+  "Switzerland";
+
+const getPlaceDetail = (properties: PhotonFeature["properties"] = {}) =>
+  [properties.street, properties.housenumber, properties.postcode, properties.city].filter(Boolean).join(", ");
+
+const getPlaceValue = (feature: PhotonFeature) => {
+  const properties = feature.properties || {};
+  const title = getPlaceTitle(properties);
+  const detail = getPlaceDetail(properties);
+  return [title, detail || properties.state || properties.country].filter(Boolean).join(", ");
+};
+
+const fetchPlaceFeatures = async (query: string, language: Language, limit = 5) => {
+  const response = await fetch(getPhotonUrl(query, language, limit));
+  if (!response.ok) {
+    throw new Error("Geocoding failed");
+  }
+
+  const data = (await response.json()) as { features?: PhotonFeature[] };
+  return (data.features || []).filter((feature) => feature.properties?.countrycode === "CH");
+};
+
+const geocode = async (query: string, language: Language) => {
+  const features = await fetchPlaceFeatures(query, language, 5);
+  const result = features[0];
+
+  if (!result) {
+    throw new Error("Location not found");
+  }
+
+  const [lon, lat] = result.geometry.coordinates;
+  return { lat: Number(lat), lon: Number(lon) };
+};
+
+const getDrivingRoute = async (pickup: string, destination: string, language: Language) => {
+  const [origin, target] = await Promise.all([geocode(pickup, language), geocode(destination, language)]);
+  const coordinates = `${origin.lon},${origin.lat};${target.lon},${target.lat}`;
+  const routeUrls = [
+    `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=false`,
+    `https://routing.openstreetmap.de/routed-car/route/v1/driving/${coordinates}?overview=false`,
+  ];
+
+  for (const routeUrl of routeUrls) {
+    try {
+      const response = await fetch(routeUrl);
+      if (!response.ok) {
+        continue;
+      }
+      const data = (await response.json()) as { routes?: Array<{ distance: number; duration: number }> };
+      const [route] = data.routes || [];
+      if (route) {
+        return {
+          distanceKm: route.distance / 1000,
+          durationSeconds: route.duration,
+        };
+      }
+    } catch {
+      // Try the next routing provider.
+    }
+  }
+
+  throw new Error("Route not found");
+};
+
+export function BookingSection({ language }: BookingSectionProps) {
+  const t = useCallback((key: TranslationKey) => translations[language][key], [language]);
+  const formRef = useRef<HTMLDivElement | null>(null);
+  const skipPickupSearchRef = useRef(false);
+  const skipDestinationSearchRef = useRef(false);
+  const [pickup, setPickup] = useState("");
+  const [destination, setDestination] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [passengers, setPassengers] = useState("");
+  const [luggage, setLuggage] = useState("");
+  const [pickupSuggestions, setPickupSuggestions] = useState<PhotonFeature[]>([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState<PhotonFeature[]>([]);
+  const [isPickupSearching, setIsPickupSearching] = useState(false);
+  const [isDestinationSearching, setIsDestinationSearching] = useState(false);
+  const [note, setNote] = useState<{ key: TranslationKey; isError: boolean }>({
+    key: "routeNote",
+    isError: false,
+  });
+  const [route, setRoute] = useState<RouteResult | null>(null);
+  const [selectedCarId, setSelectedCarId] = useState<CarOption["id"]>("toyota-prius-plus");
+  const [mapSrc, setMapSrc] = useState(getGoogleMapsRouteSrc("", ""));
 
   const selectedCar = useMemo(
-    () => carOptions.find((car) => car.id === selectedCarId) ?? carOptions[0],
+    () => carOptions.find((car) => car.id === selectedCarId) ?? carOptions[carOptions.length - 1],
     [selectedCarId]
   );
 
-  const canCalculate = useMemo(() => pickup && destination, [pickup, destination]);
+  const distanceValue = useMemo(() => {
+    if (!route) {
+      return "--";
+    }
+    if (route.distanceKm === null) {
+      return t("notCalculated");
+    }
+    return `${route.distanceKm.toLocaleString(language === "de" ? "de-CH" : "en-CH", {
+      maximumFractionDigits: 1,
+      minimumFractionDigits: 1,
+    })} km`;
+  }, [language, route, t]);
+
+  const durationValue = useMemo(() => {
+    if (!route) {
+      return "--";
+    }
+    if (route.durationSeconds === null) {
+      return t("notCalculated");
+    }
+
+    const minutes = Math.max(1, Math.round(route.durationSeconds / 60));
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours === 0) {
+      return language === "de" ? `${mins} Min.` : `${mins} min`;
+    }
+
+    return language === "de" ? `${hours} Std. ${mins} Min.` : `${hours} hr ${mins} min`;
+  }, [language, route, t]);
+
+  const priceValue = useMemo(() => {
+    if (!route) {
+      return "--";
+    }
+    if (route.distanceKm === null) {
+      return t("onRequest");
+    }
+    return `CHF ${Math.round(calculatePrice(route.distanceKm, selectedCar)).toLocaleString("de-CH")}`;
+  }, [route, selectedCar, t]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!formRef.current) {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (formRef.current?.contains(target)) {
         return;
       }
-      const target = event.target as Node;
-      if (!formRef.current.contains(target)) {
-        setPickupSuggestions([]);
-        setDestinationSuggestions([]);
-      }
+      setPickupSuggestions([]);
+      setDestinationSuggestions([]);
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
   useEffect(() => {
-    if (!pickupText.trim() || pickupText.trim().length < 3) {
+    const query = pickup.trim();
+    if (query.length < AUTOCOMPLETE_MIN_LENGTH) {
       setPickupSuggestions([]);
+      setIsPickupSearching(false);
       return;
     }
-    if (skipPickupQueryRef.current) {
-      skipPickupQueryRef.current = false;
+    if (skipPickupSearchRef.current) {
+      skipPickupSearchRef.current = false;
+      setPickupSuggestions([]);
+      setIsPickupSearching(false);
       return;
     }
 
-    const timeoutId = setTimeout(async () => {
-      setIsPickupLoading(true);
+    const timeoutId = window.setTimeout(async () => {
+      setIsPickupSearching(true);
       try {
-        const response = await fetch(
-          `/api/location-suggestions?query=${encodeURIComponent(pickupText)}&lang=${language}`
-        );
-        const data = (await response.json()) as { suggestions: LocationSuggestion[] };
-        setPickupSuggestions(data.suggestions ?? []);
+        setPickupSuggestions(await fetchPlaceFeatures(query, language, 7));
+      } catch {
+        setPickupSuggestions([]);
       } finally {
-        setIsPickupLoading(false);
+        setIsPickupSearching(false);
       }
-    }, 320);
+    }, AUTOCOMPLETE_DEBOUNCE_MS);
 
-    return () => clearTimeout(timeoutId);
-  }, [pickupText, language]);
+    return () => window.clearTimeout(timeoutId);
+  }, [language, pickup]);
 
   useEffect(() => {
-    if (!destinationText.trim() || destinationText.trim().length < 3) {
+    const query = destination.trim();
+    if (query.length < AUTOCOMPLETE_MIN_LENGTH) {
       setDestinationSuggestions([]);
+      setIsDestinationSearching(false);
       return;
     }
-    if (skipDestinationQueryRef.current) {
-      skipDestinationQueryRef.current = false;
+    if (skipDestinationSearchRef.current) {
+      skipDestinationSearchRef.current = false;
+      setDestinationSuggestions([]);
+      setIsDestinationSearching(false);
       return;
     }
 
-    const timeoutId = setTimeout(async () => {
-      setIsDestinationLoading(true);
+    const timeoutId = window.setTimeout(async () => {
+      setIsDestinationSearching(true);
       try {
-        const response = await fetch(
-          `/api/location-suggestions?query=${encodeURIComponent(destinationText)}&lang=${language}`
-        );
-        const data = (await response.json()) as { suggestions: LocationSuggestion[] };
-        setDestinationSuggestions(data.suggestions ?? []);
+        setDestinationSuggestions(await fetchPlaceFeatures(query, language, 7));
+      } catch {
+        setDestinationSuggestions([]);
       } finally {
-        setIsDestinationLoading(false);
+        setIsDestinationSearching(false);
       }
-    }, 320);
+    }, AUTOCOMPLETE_DEBOUNCE_MS);
 
-    return () => clearTimeout(timeoutId);
-  }, [destinationText, language]);
+    return () => window.clearTimeout(timeoutId);
+  }, [destination, language]);
 
-  useEffect(() => {
-    if (!routeResult) {
-      return;
-    }
-
-    const { estimatedPrice, ratePerKm, startFee } = calculateEstimatedPrice(routeResult.distanceKm, selectedCar);
-    const nextRouteResult = {
-      ...routeResult,
-      estimatedPrice,
-      ratePerKm,
-      startFee,
-    };
-
-    if (
-      estimatedPrice !== routeResult.estimatedPrice ||
-      ratePerKm !== routeResult.ratePerKm ||
-      startFee !== routeResult.startFee
-    ) {
-      setRouteResult(nextRouteResult);
-    }
-
-    setRouteInfo(getRouteInfoText(nextRouteResult, language));
-  }, [selectedCar, language, routeResult]);
-
-  const handleSelectPoint = (coords: Coordinates) => {
-    if (activeField === "pickup") {
-      setPickup(coords);
-      setPickupText(toCoordString(coords));
-      setPickupSuggestions([]);
-      return;
-    }
-
-    setDestination(coords);
-    setDestinationText(toCoordString(coords));
-    setDestinationSuggestions([]);
+  const resetRoute = () => {
+    setRoute(null);
+    setNote({ key: "routeNote", isError: false });
   };
 
-  const selectPickupSuggestion = (suggestion: LocationSuggestion) => {
-    skipPickupQueryRef.current = true;
-    setPickupText(suggestion.label);
-    setPickup({ lat: suggestion.lat, lng: suggestion.lng });
+  const updateMap = (nextPickup: string, nextDestination: string, distanceKm?: number | null) => {
+    setMapSrc(getGoogleMapsRouteSrc(nextPickup, nextDestination, distanceKm));
+  };
+
+  const selectPickupSuggestion = (feature: PhotonFeature) => {
+    skipPickupSearchRef.current = true;
+    setPickup(getPlaceValue(feature));
     setPickupSuggestions([]);
+    resetRoute();
   };
 
-  const selectDestinationSuggestion = (suggestion: LocationSuggestion) => {
-    skipDestinationQueryRef.current = true;
-    setDestinationText(suggestion.label);
-    setDestination({ lat: suggestion.lat, lng: suggestion.lng });
+  const selectDestinationSuggestion = (feature: PhotonFeature) => {
+    skipDestinationSearchRef.current = true;
+    setDestination(getPlaceValue(feature));
     setDestinationSuggestions([]);
+    resetRoute();
   };
 
-  const handleSelectMapAddress = (suggestion: LocationSuggestion) => {
-    if (activeField === "pickup") {
-      skipPickupQueryRef.current = true;
-      setPickupText(suggestion.label);
-      setPickup({ lat: suggestion.lat, lng: suggestion.lng });
-      setPickupSuggestions([]);
+  const handleSwapRoute = () => {
+    setPickup(destination);
+    setDestination(pickup);
+    setPickupSuggestions([]);
+    setDestinationSuggestions([]);
+    setRoute(null);
+    updateMap(destination.trim(), pickup.trim());
+    setNote({ key: "routeNote", isError: false });
+  };
+
+  const handleRouteSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextPickup = pickup.trim();
+    const nextDestination = destination.trim();
+
+    if (!nextPickup || !nextDestination) {
+      setRoute(null);
+      setNote({ key: "missingRoute", isError: true });
       return;
     }
 
-    skipDestinationQueryRef.current = true;
-    setDestinationText(suggestion.label);
-    setDestination({ lat: suggestion.lat, lng: suggestion.lng });
-    setDestinationSuggestions([]);
-  };
-
-  const handleCalculateRoute = async () => {
-    if (!canCalculate) {
-      setRouteInfo(
-        language === "de"
-          ? "Bitte Abholort und Zielort aus den Vorschlagen oder per Karte auswahlen."
-          : "Please select pickup and destination from suggestions or map."
-      );
-      setRouteResult(null);
-      return;
-    }
-
-    setRouteInfo(language === "de" ? "Route wird berechnet..." : "Calculating route...");
+    setRoute(null);
+    setNote({ key: "calculating", isError: false });
 
     try {
-      const response = await fetch("/api/calculate-route", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pickup,
-          destination,
-        }),
+      const result = await getDrivingRoute(nextPickup, nextDestination, language);
+      updateMap(nextPickup, nextDestination, result.distanceKm);
+      setRoute({
+        pickup: nextPickup,
+        destination: nextDestination,
+        distanceKm: result.distanceKm,
+        durationSeconds: result.durationSeconds,
       });
-
-      if (!response.ok) {
-        throw new Error("Route error");
-      }
-
-      const data = (await response.json()) as {
-        distanceKm: number;
-        durationMin: number;
-      };
-      const { estimatedPrice, ratePerKm, startFee } = calculateEstimatedPrice(data.distanceKm, selectedCar);
-      const result: RouteResult = {
-        distanceKm: data.distanceKm,
-        durationMin: data.durationMin,
-        estimatedPrice,
-        ratePerKm,
-        startFee,
-      };
-      setRouteResult(result);
-      setRouteInfo(getRouteInfoText(result, language));
-      setBookingMessage("");
+      setNote({ key: "calculated", isError: false });
     } catch {
-      setRouteResult(null);
-      setRouteInfo(
-        language === "de"
-          ? "Route konnte nicht berechnet werden. Bitte erneut versuchen."
-          : "Could not calculate route. Please try again."
-      );
+      updateMap(nextPickup, nextDestination);
+      setRoute({
+        pickup: nextPickup,
+        destination: nextDestination,
+        distanceKm: null,
+        durationSeconds: null,
+      });
+      setNote({ key: "geocodeError", isError: true });
     }
   };
 
-  const handleBookNow = async () => {
-    if (!routeResult) {
-      setBookingMessage(
-        language === "de"
-          ? "Bitte zuerst die Route berechnen."
-          : "Please calculate the route first."
-      );
+  const getInquiryPayload = () => {
+    if (!route) {
+      return null;
+    }
+
+    if (!customerName.trim() || !telephone.trim()) {
+      setNote({ key: "missingContact", isError: true });
+      return null;
+    }
+
+    return {
+      pickup: route.pickup,
+      destination: route.destination,
+      distance: distanceValue,
+      duration: durationValue,
+      price: priceValue,
+      vehicle: selectedCar.name,
+      name: customerName.trim(),
+      telephone: telephone.trim(),
+      passengers: passengers.trim() || "-",
+      luggage: luggage.trim() || "-",
+    };
+  };
+
+  const getInquiryMessage = (payload: NonNullable<ReturnType<typeof getInquiryPayload>>) =>
+    language === "de"
+      ? `Hallo Swiss Prime Lane, ich mochte einen Transfer anfragen.\n\nName: ${payload.name}\nTelefon: ${payload.telephone}\nAnzahl Personen: ${payload.passengers}\nAnzahl Gepackstucke: ${payload.luggage}\nAbholung: ${payload.pickup}\nZiel: ${payload.destination}\nFahrzeug: ${payload.vehicle}\nDistanz: ${payload.distance}\nFahrzeit: ${payload.duration}\nGeschatzter Preis: ${payload.price}\n\nBitte senden Sie mir Verfugbarkeit und ein finales Angebot.`
+      : `Hello Swiss Prime Lane, I would like to request a transfer.\n\nName: ${payload.name}\nTelephone: ${payload.telephone}\nNumber of passengers: ${payload.passengers}\nNumber of suitcases: ${payload.luggage}\nPickup: ${payload.pickup}\nDestination: ${payload.destination}\nVehicle: ${payload.vehicle}\nDistance: ${payload.distance}\nTravel time: ${payload.duration}\nEstimated price: ${payload.price}\n\nPlease send me availability and a final quote.`;
+
+  const openWhatsApp = () => {
+    const payload = getInquiryPayload();
+    if (!payload) {
       return;
     }
 
-    if (!customerEmail.trim() || !customerPhone.trim()) {
-      setBookingMessage(
-        language === "de"
-          ? "Bitte E-Mail und Telefonnummer eingeben."
-          : "Please provide email and phone number."
-      );
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(getInquiryMessage(payload))}`, "_blank", "noopener");
+  };
+
+  const openEmail = () => {
+    const payload = getInquiryPayload();
+    if (!payload) {
       return;
     }
 
-    const content = `
-Neue Buchungsanfrage
+    const subject = encodeURIComponent(t("emailSubject"));
+    const body = encodeURIComponent(getInquiryMessage(payload));
+    window.location.href = `mailto:${INQUIRY_EMAIL}?subject=${subject}&body=${body}`;
+  };
 
-Abholort: ${pickupText}
-Zielort: ${destinationText}
-Datum/Uhrzeit: ${dateTime || "Nicht angegeben"}
-Kunden E-Mail: ${customerEmail || "Nicht angegeben"}
-Kunden Telefon: ${customerPhone || "Nicht angegeben"}
-Fahrzeug: ${selectedCar.name}
-Tarifbereich: ${getRateLabel(routeResult.distanceKm, language)}
-Preis pro km: CHF ${routeResult.ratePerKm.toFixed(2)}
-Startgebuhr: CHF ${routeResult.startFee.toFixed(2)}
-Distanz: ${routeResult.distanceKm.toFixed(2)} km
-Fahrzeit: ${routeResult.durationMin.toFixed(0)} min
-Geschatzter Preis: CHF ${routeResult.estimatedPrice.toFixed(2)}
-`;
-
-    const formData = new FormData();
-    formData.append("access_key", "e549531d-071d-4fb4-b851-ca1854aa3802");
-    formData.append("subject", "Neue Fahrtanfrage - Swiss Prime Lane");
-    formData.append("from_name", "Swiss Prime Lane Website");
-    formData.append("name", customerEmail);
-    formData.append("email", customerEmail);
-    formData.append("phone", customerPhone);
-    formData.append("Abholort", pickupText);
-    formData.append("Zielort", destinationText);
-    formData.append("Datum/Uhrzeit", dateTime || "Nicht angegeben");
-    formData.append("Kunden E-Mail", customerEmail || "Nicht angegeben");
-    formData.append("Kunden Telefon", customerPhone || "Nicht angegeben");
-    formData.append("Fahrzeug", selectedCar.name);
-    formData.append("Tarifbereich", getRateLabel(routeResult.distanceKm, language));
-    formData.append("Preis pro km", `CHF ${routeResult.ratePerKm.toFixed(2)}`);
-    formData.append("Startgebuhr", `CHF ${routeResult.startFee.toFixed(2)}`);
-    formData.append("Distanz", `${routeResult.distanceKm.toFixed(2)} km`);
-    formData.append("Fahrzeit", `${routeResult.durationMin.toFixed(0)} min`);
-    formData.append("Geschatzter Preis", `CHF ${routeResult.estimatedPrice.toFixed(2)}`);
-    formData.append("message", content);
-
-    try {
-      const response = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        body: formData,
-      });
-      const data = (await response.json()) as { success?: boolean };
-
-      if (!response.ok || !data.success) {
-        setBookingMessage(
-          language === "de"
-            ? "Buchung konnte nicht gesendet werden. Bitte erneut versuchen."
-            : "Booking request could not be sent. Please try again."
-        );
-        return;
-      }
-    } catch {
-      setBookingMessage(
-        language === "de"
-          ? "Buchung konnte nicht gesendet werden. Bitte erneut versuchen."
-          : "Booking request could not be sent. Please try again."
-      );
-      return;
+  const renderSuggestions = (
+    features: PhotonFeature[],
+    isLoading: boolean,
+    onSelect: (feature: PhotonFeature) => void
+  ) => {
+    if (isLoading) {
+      return <div className="spdrive-autocomplete-empty">{t("searchingPlaces")}</div>;
     }
 
-    setRouteInfo(
-      language === "de"
-        ? "Nachricht wurde gesendet. Wir kontaktieren Sie innerhalb einer Stunde."
-        : "Message sent successfully. We will contact you within one hour."
-    );
-    setBookingMessage(
-      language === "de"
-        ? "Vielen Dank. Ihre Anfrage wurde an unser Team ubermittelt."
-        : "Thank you. Your request has been forwarded to our team."
-    );
+    if (!features.length) {
+      return <div className="spdrive-autocomplete-empty">{t("noPlaces")}</div>;
+    }
+
+    return features.map((feature, index) => {
+      const properties = feature.properties || {};
+      const title = getPlaceTitle(properties);
+      const detail = getPlaceDetail(properties) || properties.state || properties.country || "";
+
+      return (
+        <button
+          className="spdrive-autocomplete-option"
+          key={`${feature.geometry.coordinates.join("-")}-${index}`}
+          type="button"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => onSelect(feature)}
+        >
+          <strong>{title}</strong>
+          <span>{detail}</span>
+        </button>
+      );
+    });
   };
 
   return (
-    <section id="booking" className="section-shell">
-      <div className="mx-auto max-w-5xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          className="rounded-3xl border border-white/12 bg-white/[0.03] p-6 sm:p-8"
-        >
-          <p className="eyebrow">{language === "de" ? "BUCHUNG" : "BOOKING"}</p>
-          <h2 className="section-title">
-            {language === "de" ? (
-              <>
-                Plane deine <span className="gold-text">Premiumfahrt</span>
-              </>
-            ) : (
-              <>
-                Plan Your <span className="gold-text">Premium Ride</span>
-              </>
-            )}
-          </h2>
+    <section id="booking" className="section-shell spdrive-section">
+      <div className="spdrive-booking-grid" ref={formRef}>
+        <div className="spdrive-booking-panel">
+          <p className="spdrive-eyebrow">{t("eyebrow")}</p>
+          <h2>{t("headline")}</h2>
 
-          <div className="mt-6">
-            <MapPicker
-              language={language}
-              activeField={activeField}
-              pickup={pickup}
-              destination={destination}
-              onActiveFieldChange={setActiveField}
-              onSelectAddress={handleSelectMapAddress}
-              onSelectPoint={handleSelectPoint}
-            />
+          <form className="spdrive-route-form" onSubmit={handleRouteSubmit}>
+            <label className="spdrive-field">
+              <span>{t("pickupLabel")}</span>
+              <Icon name="map-pin" />
+              <input
+                value={pickup}
+                onChange={(event) => {
+                  setPickup(event.target.value);
+                  resetRoute();
+                }}
+                onFocus={() => {
+                  if (pickup.trim().length >= AUTOCOMPLETE_MIN_LENGTH) {
+                    setPickupSuggestions((current) => current);
+                  }
+                }}
+                type="text"
+                role="combobox"
+                autoComplete="off"
+                aria-autocomplete="list"
+                aria-controls="spdrive-pickup-suggestions"
+                aria-expanded={pickupSuggestions.length > 0 || isPickupSearching}
+                placeholder={t("pickupPlaceholder")}
+                required
+              />
+              {pickup.trim().length >= AUTOCOMPLETE_MIN_LENGTH && (pickupSuggestions.length > 0 || isPickupSearching) ? (
+                <div className="spdrive-autocomplete-list" id="spdrive-pickup-suggestions" role="listbox">
+                  {renderSuggestions(pickupSuggestions, isPickupSearching, selectPickupSuggestion)}
+                </div>
+              ) : null}
+            </label>
+
+            <button
+              className="spdrive-swap-button"
+              type="button"
+              onClick={handleSwapRoute}
+              aria-label={language === "de" ? "Route tauschen" : "Swap route"}
+            >
+              <Icon name="swap" />
+            </button>
+
+            <label className="spdrive-field">
+              <span>{t("destinationLabel")}</span>
+              <Icon name="flag" />
+              <input
+                value={destination}
+                onChange={(event) => {
+                  setDestination(event.target.value);
+                  resetRoute();
+                }}
+                type="text"
+                role="combobox"
+                autoComplete="off"
+                aria-autocomplete="list"
+                aria-controls="spdrive-destination-suggestions"
+                aria-expanded={destinationSuggestions.length > 0 || isDestinationSearching}
+                placeholder={t("destinationPlaceholder")}
+                required
+              />
+              {destination.trim().length >= AUTOCOMPLETE_MIN_LENGTH &&
+              (destinationSuggestions.length > 0 || isDestinationSearching) ? (
+                <div className="spdrive-autocomplete-list" id="spdrive-destination-suggestions" role="listbox">
+                  {renderSuggestions(destinationSuggestions, isDestinationSearching, selectDestinationSuggestion)}
+                </div>
+              ) : null}
+            </label>
+
+            <p className={`spdrive-route-note${note.isError ? " is-error" : ""}`}>{t(note.key)}</p>
+
+            <button className="spdrive-primary-button" type="submit">
+              <Icon name="route" />
+              <span>{t("calculateButton")}</span>
+            </button>
+          </form>
+
+          <div className="spdrive-route-summary" aria-live="polite">
+            <div>
+              <span>{t("distance")}</span>
+              <strong>{distanceValue}</strong>
+            </div>
+            <div>
+              <span>{t("duration")}</span>
+              <strong>{durationValue}</strong>
+            </div>
+            <div>
+              <span>{t("price")}</span>
+              <strong>{priceValue}</strong>
+            </div>
           </div>
 
-          <div ref={formRef} className="mt-6 space-y-4">
-            <div className="relative">
-              <label className="field-label">
-                {language === "de" ? "Abholort" : "Pickup location"}
-                <input
-                  className="field-input"
-                  value={pickupText}
-                  onFocus={() => setActiveField("pickup")}
-                  onBlur={() => setTimeout(() => setPickupSuggestions([]), 120)}
-                  onChange={(event) => {
-                    setPickupText(event.target.value);
-                    setPickup(null);
-                  }}
-                  placeholder={language === "de" ? "Zurich HB, Bahnhofplatz" : "Zurich HB, Bahnhofplatz"}
-                />
-              </label>
-              {pickupSuggestions.length > 0 ? (
-                <div className="suggestion-dropdown">
-                  {pickupSuggestions.map((suggestion) => (
-                    <button
-                      key={`${suggestion.lat}-${suggestion.lng}-${suggestion.label}`}
-                      type="button"
-                      className="suggestion-item"
-                      onClick={() => selectPickupSuggestion(suggestion)}
-                    >
-                      {suggestion.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-              {isPickupLoading ? (
-                <p className="mt-1 text-xs text-white/55">{language === "de" ? "Suche..." : "Searching..."}</p>
-              ) : null}
-            </div>
-
-            <div className="relative">
-              <label className="field-label">
-                {language === "de" ? "Zielort" : "Destination"}
-                <input
-                  className="field-input"
-                  value={destinationText}
-                  onFocus={() => setActiveField("destination")}
-                  onBlur={() => setTimeout(() => setDestinationSuggestions([]), 120)}
-                  onChange={(event) => {
-                    setDestinationText(event.target.value);
-                    setDestination(null);
-                  }}
-                  placeholder={language === "de" ? "Flughafen Genf" : "Geneva Airport"}
-                />
-              </label>
-              {destinationSuggestions.length > 0 ? (
-                <div className="suggestion-dropdown">
-                  {destinationSuggestions.map((suggestion) => (
-                    <button
-                      key={`${suggestion.lat}-${suggestion.lng}-${suggestion.label}`}
-                      type="button"
-                      className="suggestion-item"
-                      onClick={() => selectDestinationSuggestion(suggestion)}
-                    >
-                      {suggestion.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-              {isDestinationLoading ? (
-                <p className="mt-1 text-xs text-white/55">{language === "de" ? "Suche..." : "Searching..."}</p>
-              ) : null}
-            </div>
-
-            <label className="field-label">
-              {language === "de" ? "Datum & Uhrzeit" : "Date & time"}
-              <input
-                className="field-input"
-                type="datetime-local"
-                value={dateTime}
-                onChange={(event) => setDateTime(event.target.value)}
-              />
-            </label>
-
-            <label className="field-label">
-              {language === "de" ? "E-Mail Adresse" : "Email address"}
-              <input
-                className="field-input"
-                type="email"
-                value={customerEmail}
-                onChange={(event) => setCustomerEmail(event.target.value)}
-                placeholder={language === "de" ? "kunde@email.ch" : "customer@email.ch"}
-              />
-            </label>
-
-            <label className="field-label">
-              {language === "de" ? "Telefonnummer" : "Phone number"}
-              <input
-                className="field-input"
-                type="tel"
-                value={customerPhone}
-                onChange={(event) => setCustomerPhone(event.target.value)}
-                placeholder={language === "de" ? "+41 79 123 45 67" : "+41 79 123 45 67"}
-              />
-            </label>
-
-            <div>
-              <p className="field-label">{language === "de" ? "Fahrzeugwahl" : "Select vehicle"}</p>
-              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          {route ? (
+            <div className="spdrive-vehicle-picker" aria-label={t("selectVehicle")}>
+              <p>{t("selectVehicle")}</p>
+              <div className="spdrive-vehicle-grid">
                 {carOptions.map((car) => (
                   <button
                     key={car.id}
                     type="button"
+                    className={`spdrive-vehicle-card${selectedCarId === car.id ? " is-active" : ""}`}
                     onClick={() => setSelectedCarId(car.id)}
-                    className={`vehicle-card ${selectedCarId === car.id ? "vehicle-card-active" : ""}`}
+                    aria-pressed={selectedCarId === car.id}
                   >
-                    <span className="vehicle-dot" />
-                    <span className="text-sm font-medium text-white">{car.name}</span>
-                    <span className="text-xs text-white/70">
-                      {language === "de" ? "Distanzabhangiger Tarif" : "Distance-based tariff"}
-                    </span>
+                    <span className="spdrive-vehicle-dot" />
+                    <strong>{car.name}</strong>
                   </button>
                 ))}
               </div>
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/45 bg-amber-300/20 px-4 py-2 text-sm font-semibold text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.25)]">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
-                {language === "de" ? "Gewahlt" : "Selected"}: {selectedCar.name}
+              <div className="spdrive-selected-vehicle">
+                <span />
+                {t("selectedVehicle")}: {selectedCar.name}
               </div>
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button type="button" onClick={handleCalculateRoute} className="btn-premium">
-              {language === "de" ? "Route berechnen" : "Calculate Route"}
-            </button>
-            <button type="button" onClick={handleBookNow} className="btn-book-now">
-              {language === "de" ? "Jetzt buchen" : "Book Now"}
-            </button>
-          </div>
-          <p className="mt-3 max-w-3xl text-xs leading-relaxed text-white/60">
-            {language === "de"
-              ? "Nach dem Klick auf Jetzt buchen prufen wir Ihre Anfrage und senden Ihnen einen Link fur die schnelle Zahlung der Fahrt."
-              : "After clicking Book Now, we will review your request and send you a link for quick payment for the ride."}
-          </p>
-          <p className="mt-3 max-w-3xl text-xs leading-relaxed text-white/55">
-            {language === "de"
-              ? "Falls das von Ihnen gewahlte Fahrzeug nicht verfugbar ist, wird Ihnen ein anderes Fahrzeug mit vergleichbarem Komfort zugeteilt."
-              : "If the vehicle you selected is unavailable, another vehicle with comparable comfort will be assigned to you."}
-          </p>
-
-          {routeInfo ? <p className="mt-4 text-sm text-white/75">{routeInfo}</p> : null}
-          {bookingMessage ? <p className="mt-2 rounded-xl bg-emerald-500/15 p-3 text-sm text-emerald-200">{bookingMessage}</p> : null}
-
-          {routeResult ? (
-            <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/80">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/45 bg-amber-300/20 px-3 py-1.5 text-xs font-semibold text-amber-100">
-                <span className="h-2 w-2 rounded-full bg-amber-300" />
-                {language === "de" ? "Tarif" : "Tariff"}: {selectedCar.name} ·{" "}
-                {getRateLabel(routeResult.distanceKm, language)} · CHF {formatChfRate(routeResult.ratePerKm)} / km
-              </div>
-              <p>
-                {language === "de" ? "Distanz" : "Distance"}: {routeResult.distanceKm.toFixed(2)} km
-              </p>
-              <p>
-                {language === "de" ? "Fahrzeit" : "Travel time"}: {routeResult.durationMin.toFixed(0)} min
-              </p>
-              <p>
-                {language === "de" ? "Startgebuhr" : "Starting fee"}: CHF {routeResult.startFee.toFixed(2)}
-              </p>
-              <p>
-                {language === "de" ? "Geschatzter Preis" : "Estimated price"}: CHF{" "}
-                <span className="gold-text">{routeResult.estimatedPrice.toFixed(2)}</span>
-              </p>
+              <p className="spdrive-vehicle-note">{t("vehicleAvailabilityNote")}</p>
             </div>
           ) : null}
-        </motion.div>
+        </div>
+
+        <div className="spdrive-map-wrap" aria-label="Route map">
+          <iframe
+            title="Google Maps route"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            src={mapSrc}
+          />
+        </div>
+
+        <div className="spdrive-contact-panel">
+          <label className="spdrive-field">
+            <span>{t("nameLabel")}</span>
+            <Icon name="user" />
+            <input
+              value={customerName}
+              onChange={(event) => setCustomerName(event.target.value)}
+              type="text"
+              autoComplete="name"
+              placeholder={t("namePlaceholder")}
+            />
+          </label>
+
+          <label className="spdrive-field">
+            <span>{t("telephoneLabel")}</span>
+            <Icon name="phone" />
+            <input
+              value={telephone}
+              onChange={(event) => setTelephone(event.target.value)}
+              type="tel"
+              autoComplete="tel"
+              placeholder={t("telephonePlaceholder")}
+            />
+          </label>
+
+          <div className="spdrive-contact-inline-fields">
+            <label className="spdrive-field">
+              <span>{t("passengersLabel")}</span>
+              <input
+                value={passengers}
+                onChange={(event) => setPassengers(event.target.value)}
+                type="number"
+                min="1"
+                inputMode="numeric"
+                placeholder={t("passengersPlaceholder")}
+              />
+            </label>
+
+            <label className="spdrive-field">
+              <span>{t("luggageLabel")}</span>
+              <input
+                value={luggage}
+                onChange={(event) => setLuggage(event.target.value)}
+                type="number"
+                min="0"
+                inputMode="numeric"
+                placeholder={t("luggagePlaceholder")}
+              />
+            </label>
+          </div>
+
+          <button className="spdrive-whatsapp-button" type="button" onClick={openWhatsApp} disabled={!route}>
+            <Icon name="message" />
+            <span>{t("whatsappButton")}</span>
+          </button>
+
+          <button className="spdrive-email-button" type="button" onClick={openEmail} disabled={!route}>
+            <Icon name="mail" />
+            <span>{t("emailButton")}</span>
+          </button>
+        </div>
       </div>
     </section>
   );
