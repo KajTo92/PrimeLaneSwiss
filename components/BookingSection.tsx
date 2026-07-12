@@ -81,6 +81,7 @@ const INQUIRY_EMAIL = "Primelaneswiss@gmail.com";
 const SHORT_DISTANCE_LIMIT_KM = 20;
 const AUTOCOMPLETE_MIN_LENGTH = 2;
 const AUTOCOMPLETE_DEBOUNCE_MS = 220;
+const SUPPORTED_ROUTE_COUNTRIES = new Set(["CH", "DE", "AT", "IT", "FR", "LI"]);
 
 const carOptions: CarOption[] = [
   { id: "tesla-s", name: "Tesla Model S", startFee: 7, upTo20Rate: 3, over20Rate: 2 },
@@ -233,7 +234,7 @@ const getPhotonUrl = (query: string, language: Language, limit = 5) => {
   const url = new URL("https://photon.komoot.io/api/");
   url.searchParams.set("limit", String(limit));
   url.searchParams.set("lang", language);
-  url.searchParams.set("q", `${query}, Switzerland`);
+  url.searchParams.set("q", query);
   return url;
 };
 
@@ -261,7 +262,9 @@ const fetchPlaceFeatures = async (query: string, language: Language, limit = 5) 
   }
 
   const data = (await response.json()) as { features?: PhotonFeature[] };
-  return (data.features || []).filter((feature) => feature.properties?.countrycode === "CH");
+  return (data.features || []).filter((feature) =>
+    SUPPORTED_ROUTE_COUNTRIES.has(feature.properties?.countrycode ?? "")
+  );
 };
 
 const geocode = async (query: string, language: Language) => {
