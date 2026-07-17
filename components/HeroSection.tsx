@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useState } from "react";
 import { Language } from "@/types/language";
 import { RotatingHeadline } from "@/components/RotatingHeadline";
 
@@ -9,6 +10,7 @@ type HeroSectionProps = {
 };
 
 export function HeroSection({ language }: HeroSectionProps) {
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 500], [0, 60]);
   const rotatingPhrases =
@@ -28,8 +30,9 @@ export function HeroSection({ language }: HeroSectionProps) {
           muted
           playsInline
           preload="metadata"
-          poster="/media/teslax.png"
-          className="h-full w-full object-cover"
+          onCanPlay={() => setIsVideoReady(true)}
+          onLoadedData={() => setIsVideoReady(true)}
+          className={`h-full w-full object-cover hero-background-video${isVideoReady ? " is-ready" : ""}`}
         >
           <source src="/media/bgfilmpc.mp4" type="video/mp4" />
         </video>
