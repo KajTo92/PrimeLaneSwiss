@@ -399,6 +399,8 @@ body::before {
 }
 
 .spdrive-section {
+  z-index: 5;
+  overflow: visible;
   --spdrive-panel: #18191b;
   --spdrive-panel-soft: #202124;
   --spdrive-line: rgba(223, 178, 76, 0.22);
@@ -416,6 +418,8 @@ body::before {
 }
 
 .spdrive-booking-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 14px;
   width: min(1180px, 100%);
@@ -441,6 +445,8 @@ body::before {
 }
 
 .spdrive-contact-panel {
+  position: relative;
+  z-index: 3;
   display: grid;
   gap: 12px;
   padding: 18px;
@@ -531,7 +537,295 @@ body::before {
   box-shadow: 0 0 0 4px rgba(217, 169, 63, 0.1);
 }
 
+.spdrive-field.is-invalid input,
+.spdrive-schedule.is-invalid .spdrive-schedule-trigger {
+  border-color: rgba(255, 96, 82, 0.92);
+  box-shadow: 0 0 0 4px rgba(255, 96, 82, 0.12);
+}
+
+.spdrive-field.is-invalid > span,
+.spdrive-schedule.is-invalid .spdrive-schedule-label {
+  color: var(--spdrive-error);
+}
+
+.spdrive-schedule {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  z-index: 15;
+}
+
+.spdrive-schedule.is-open {
+  margin-bottom: 0;
+}
+
+.spdrive-schedule-label {
+  color: var(--spdrive-muted);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.spdrive-schedule-trigger {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: var(--spdrive-panel-soft);
+  color: var(--spdrive-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.spdrive-schedule-trigger:hover,
+.spdrive-schedule-trigger.is-open {
+  border-color: rgba(243, 200, 95, 0.72);
+  box-shadow: 0 0 0 4px rgba(217, 169, 63, 0.1);
+}
+
+.spdrive-schedule-trigger .spdrive-icon {
+  flex: 0 0 auto;
+  width: 19px;
+  color: var(--spdrive-gold);
+}
+
+.spdrive-schedule-trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spdrive-schedule-trigger .is-placeholder {
+  color: #8f8a80;
+}
+
+.spdrive-calendar {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1000;
+  width: min(360px, calc(100vw - 28px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  margin-top: 0;
+  padding: 16px;
+  border: 1px solid rgba(243, 200, 95, 0.32);
+  border-radius: 10px;
+  background: #171819;
+  box-shadow: 0 24px 58px rgba(0, 0, 0, 0.56);
+  transform: translate(-50%, -50%);
+}
+
+.spdrive-calendar-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.spdrive-calendar-header strong {
+  color: var(--spdrive-text);
+  font-size: 0.96rem;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.spdrive-calendar-header button,
+.spdrive-calendar-days button {
+  border: 0;
+  color: var(--spdrive-text);
+  cursor: pointer;
+}
+
+.spdrive-calendar-header button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--spdrive-line);
+  border-radius: 999px;
+  background: rgba(217, 169, 63, 0.08);
+  color: var(--spdrive-gold-strong);
+  font-size: 1.5rem;
+}
+
+.spdrive-calendar-header button:disabled {
+  cursor: not-allowed;
+  opacity: 0.28;
+}
+
+.spdrive-calendar-weekdays,
+.spdrive-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.spdrive-calendar-weekdays {
+  margin-bottom: 5px;
+}
+
+.spdrive-calendar-weekdays span {
+  color: var(--spdrive-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.spdrive-calendar-days button,
+.spdrive-calendar-days > span {
+  aspect-ratio: 1;
+}
+
+.spdrive-calendar-days button {
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.84rem;
+}
+
+.spdrive-calendar-days button:hover:not(:disabled) {
+  background: rgba(217, 169, 63, 0.14);
+  color: var(--spdrive-gold-strong);
+}
+
+.spdrive-calendar-days button.is-selected {
+  background: linear-gradient(180deg, var(--spdrive-gold-strong), var(--spdrive-gold));
+  color: var(--spdrive-ink);
+  font-weight: 900;
+}
+
+.spdrive-calendar-days button:disabled {
+  color: #5e5c57;
+  cursor: not-allowed;
+}
+
+.spdrive-calendar-time {
+  display: grid;
+  gap: 7px;
+  margin-top: 15px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spdrive-calendar-time > span {
+  color: var(--spdrive-muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.spdrive-time-picker {
+  display: grid;
+  grid-template-columns: minmax(96px, 1.15fr) auto minmax(84px, 0.85fr) 42px;
+  align-items: end;
+  gap: 8px;
+}
+
+.spdrive-time-picker .spdrive-icon {
+  align-self: center;
+  justify-self: end;
+  width: 36px;
+  color: var(--spdrive-gold-strong);
+  filter: drop-shadow(0 0 10px rgba(217, 169, 63, 0.24));
+}
+
+.spdrive-time-picker label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px 11px 11px;
+  border: 1px solid rgba(243, 200, 95, 0.42);
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, rgba(243, 200, 95, 0.2), rgba(217, 169, 63, 0.07)),
+    #191a1b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.spdrive-time-picker label span {
+  color: var(--spdrive-gold-strong);
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.spdrive-time-picker select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 24px 0 10px;
+  border: 1px solid rgba(243, 200, 95, 0.28);
+  border-radius: 7px;
+  outline: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0)),
+    #101112;
+  color: var(--spdrive-text);
+  color-scheme: dark;
+  font: inherit;
+  font-size: 1.08rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.spdrive-time-picker select:hover,
+.spdrive-time-picker select:focus {
+  border-color: var(--spdrive-gold-strong);
+  box-shadow: 0 0 0 3px rgba(217, 169, 63, 0.14);
+}
+
+.spdrive-time-picker > span {
+  align-self: end;
+  padding-bottom: 8px;
+  color: var(--spdrive-gold-strong);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.spdrive-calendar-confirm {
+  min-height: 50px;
+  margin-top: 8px;
+  border: 1px solid rgba(243, 200, 95, 0.62);
+  border-radius: 9px;
+  background: linear-gradient(180deg, var(--spdrive-gold-strong), var(--spdrive-gold));
+  color: var(--spdrive-ink);
+  font-size: 0.98rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(217, 169, 63, 0.22);
+}
+
+.spdrive-calendar-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 36px rgba(217, 169, 63, 0.28);
+}
+
 @media (max-width: 380px) {
+  .spdrive-calendar {
+    width: min(340px, calc(100vw - 20px));
+    padding: 14px;
+  }
+
+  .spdrive-time-picker {
+    grid-template-columns: minmax(82px, 1.1fr) auto minmax(70px, 0.9fr) 34px;
+    gap: 6px;
+  }
+
+  .spdrive-time-picker label {
+    padding-inline: 7px;
+  }
+
+  .spdrive-time-picker .spdrive-icon {
+    width: 31px;
+  }
+
+  .spdrive-time-picker select {
+    padding-inline: 8px 20px;
+  }
+
   .spdrive-contact-inline-fields {
     grid-template-columns: 1fr;
   }
@@ -645,6 +939,10 @@ body::before {
   color: var(--spdrive-ink);
 }
 
+.spdrive-primary-button.is-invalid {
+  box-shadow: 0 0 0 4px rgba(255, 96, 82, 0.16);
+}
+
 .spdrive-whatsapp-button {
   margin-top: 2px;
   background: #25d366;
@@ -662,6 +960,18 @@ body::before {
 .spdrive-email-button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.spdrive-contact-error {
+  margin: -2px 0 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 96, 82, 0.36);
+  border-radius: 8px;
+  background: rgba(255, 96, 82, 0.1);
+  color: var(--spdrive-error);
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.45;
 }
 
 .spdrive-route-summary {
