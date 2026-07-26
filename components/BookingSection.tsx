@@ -37,10 +37,7 @@ type TranslationKey =
   | "calculated"
   | "geocodeError"
   | "missingRoute"
-  | "missingCalculatedRoute"
-  | "missingContact"
-  | "missingSchedule"
-  | "missingInquiryFields"
+  | "notProvided"
   | "searchingPlaces"
   | "noPlaces"
   | "notCalculated"
@@ -85,15 +82,6 @@ type CarOption = {
 };
 
 type IconName = "map-pin" | "flag" | "route" | "swap" | "user" | "phone" | "message" | "mail" | "calendar" | "clock";
-type InvalidField =
-  | "pickup"
-  | "destination"
-  | "route"
-  | "customerName"
-  | "telephone"
-  | "schedule"
-  | "passengers"
-  | "luggage";
 
 const WHATSAPP_NUMBER = "41772037643";
 const INQUIRY_EMAIL = "Primelaneswiss@gmail.com";
@@ -141,10 +129,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     calculated: "Estimated transfer price. Final quote will be confirmed by Swiss Prime Lane.",
     geocodeError: "Route distance could not be calculated. You can still send the inquiry.",
     missingRoute: "Please enter both pickup and destination.",
-    missingCalculatedRoute: "Please click Show route and price before sending the inquiry.",
-    missingContact: "Please enter your name and telephone number.",
-    missingSchedule: "Please select the pickup date and time.",
-    missingInquiryFields: "Please complete all highlighted fields before sending the inquiry.",
+    notProvided: "Not provided",
     searchingPlaces: "Searching...",
     noPlaces: "No matching place found",
     notCalculated: "Not calculated",
@@ -189,10 +174,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     geocodeError:
       "Die Routendistanz konnte nicht berechnet werden. Sie konnen die Anfrage trotzdem senden.",
     missingRoute: "Bitte geben Sie Abholort und Ziel ein.",
-    missingCalculatedRoute: "Bitte klicken Sie zuerst auf Route und Preis anzeigen, bevor Sie die Anfrage senden.",
-    missingContact: "Bitte geben Sie Ihren Namen und Ihre Telefonnummer ein.",
-    missingSchedule: "Bitte wahlen Sie Abholdatum und Uhrzeit aus.",
-    missingInquiryFields: "Bitte fullen Sie alle markierten Felder aus, bevor Sie die Anfrage senden.",
+    notProvided: "Nicht angegeben",
     searchingPlaces: "Suche...",
     noPlaces: "Kein passender Ort gefunden",
     notCalculated: "Nicht berechnet",
@@ -388,7 +370,6 @@ export function BookingSection({ language }: BookingSectionProps) {
     key: "routeNote",
     isError: false,
   });
-  const [invalidFields, setInvalidFields] = useState<InvalidField[]>([]);
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [selectedCarId, setSelectedCarId] = useState<CarOption["id"]>("toyota-prius-plus");
   const [mapSrc, setMapSrc] = useState(getGoogleMapsRouteSrc("", ""));
@@ -416,15 +397,6 @@ export function BookingSection({ language }: BookingSectionProps) {
     }).format(fromDateValue(pickupDate));
     return pickupTime ? `${formattedDate}, ${pickupTime}` : formattedDate;
   }, [language, pickupDate, pickupTime]);
-
-  const hasInvalidField = useCallback(
-    (field: InvalidField) => invalidFields.includes(field),
-    [invalidFields]
-  );
-
-  const clearInvalidFields = useCallback((...fields: InvalidField[]) => {
-    setInvalidFields((current) => current.filter((field) => !fields.includes(field)));
-  }, []);
 
   const selectedCar = useMemo(
     () => carOptions.find((car) => car.id === selectedCarId) ?? carOptions[carOptions.length - 1],
@@ -549,7 +521,6 @@ export function BookingSection({ language }: BookingSectionProps) {
   const resetRoute = () => {
     setRoute(null);
     setNote({ key: "routeNote", isError: false });
-    clearInvalidFields("route");
   };
 
   const updateMap = (nextPickup: string, nextDestination: string, distanceKm?: number | null) => {
@@ -560,7 +531,6 @@ export function BookingSection({ language }: BookingSectionProps) {
     skipPickupSearchRef.current = true;
     setPickup(getPlaceValue(feature));
     setPickupSuggestions([]);
-    clearInvalidFields("pickup");
     resetRoute();
   };
 
@@ -568,7 +538,6 @@ export function BookingSection({ language }: BookingSectionProps) {
     skipDestinationSearchRef.current = true;
     setDestination(getPlaceValue(feature));
     setDestinationSuggestions([]);
-    clearInvalidFields("destination");
     resetRoute();
   };
 
@@ -579,7 +548,6 @@ export function BookingSection({ language }: BookingSectionProps) {
     setDestinationSuggestions([]);
     setRoute(null);
     updateMap(destination.trim(), pickup.trim());
-    clearInvalidFields("pickup", "destination", "route");
     setNote({ key: "routeNote", isError: false });
   };
 
@@ -590,15 +558,10 @@ export function BookingSection({ language }: BookingSectionProps) {
 
     if (!nextPickup || !nextDestination) {
       setRoute(null);
-      setInvalidFields([
-        ...(!nextPickup ? (["pickup"] as InvalidField[]) : []),
-        ...(!nextDestination ? (["destination"] as InvalidField[]) : []),
-      ]);
       setNote({ key: "missingRoute", isError: true });
       return;
     }
 
-    clearInvalidFields("pickup", "destination", "route");
     setRoute(null);
     setNote({ key: "calculating", isError: false });
 
@@ -625,91 +588,37 @@ export function BookingSection({ language }: BookingSectionProps) {
   };
 
   const getInquiryPayload = () => {
-    const missingFields: InvalidField[] = [];
+    const fallback = t("notProvided");
     const nextPickup = pickup.trim();
     const nextDestination = destination.trim();
 
-    if (!nextPickup) {
-      missingFields.push("pickup");
-    }
-    if (!nextDestination) {
-      missingFields.push("destination");
-    }
-    if (!route) {
-      missingFields.push("route");
-    }
-    if (!customerName.trim()) {
-      missingFields.push("customerName");
-    }
-    if (!telephone.trim()) {
-      missingFields.push("telephone");
-    }
-    if (!pickupDate || !pickupTime) {
-      missingFields.push("schedule");
-    }
-    if (!passengers.trim()) {
-      missingFields.push("passengers");
-    }
-    if (!luggage.trim()) {
-      missingFields.push("luggage");
-    }
-
-    if (missingFields.length > 0) {
-      setInvalidFields(missingFields);
-      setNote({
-        key:
-          !route && nextPickup && nextDestination
-            ? "missingCalculatedRoute"
-            : "missingInquiryFields",
-        isError: true,
-      });
-      if (missingFields.includes("schedule")) {
-        setIsCalendarOpen(true);
-      }
-      return null;
-    }
-
-    setInvalidFields([]);
-    const confirmedRoute = route;
-    if (!confirmedRoute) {
-      return null;
-    }
-
     return {
-      pickup: confirmedRoute.pickup,
-      destination: confirmedRoute.destination,
-      distance: distanceValue,
-      duration: durationValue,
-      price: priceValue,
+      pickup: nextPickup || fallback,
+      destination: nextDestination || fallback,
+      distance: route ? distanceValue : fallback,
+      duration: route ? durationValue : fallback,
+      price: route ? priceValue : fallback,
       vehicle: selectedCar.name,
-      name: customerName.trim(),
-      telephone: telephone.trim(),
-      schedule: formattedSchedule,
-      passengers: passengers.trim(),
-      luggage: luggage.trim(),
+      name: customerName.trim() || fallback,
+      telephone: telephone.trim() || fallback,
+      schedule: formattedSchedule || fallback,
+      passengers: passengers.trim() || fallback,
+      luggage: luggage.trim() || fallback,
     };
   };
 
-  const getInquiryMessage = (payload: NonNullable<ReturnType<typeof getInquiryPayload>>) =>
+  const getInquiryMessage = (payload: ReturnType<typeof getInquiryPayload>) =>
     language === "de"
       ? `Hallo Swiss Prime Lane, ich mochte einen Transfer anfragen.\n\nName: ${payload.name}\nTelefon: ${payload.telephone}\nAbholdatum und Uhrzeit: ${payload.schedule}\nAnzahl Personen: ${payload.passengers}\nAnzahl Gepackstucke: ${payload.luggage}\nAbholung: ${payload.pickup}\nZiel: ${payload.destination}\nFahrzeug: ${payload.vehicle}\nDistanz: ${payload.distance}\nFahrzeit: ${payload.duration}\nGeschatzter Preis: ${payload.price}\n\nBitte senden Sie mir Verfugbarkeit und ein finales Angebot.`
       : `Hello Swiss Prime Lane, I would like to request a transfer.\n\nName: ${payload.name}\nTelephone: ${payload.telephone}\nPickup date and time: ${payload.schedule}\nNumber of passengers: ${payload.passengers}\nNumber of suitcases: ${payload.luggage}\nPickup: ${payload.pickup}\nDestination: ${payload.destination}\nVehicle: ${payload.vehicle}\nDistance: ${payload.distance}\nTravel time: ${payload.duration}\nEstimated price: ${payload.price}\n\nPlease send me availability and a final quote.`;
 
   const openWhatsApp = () => {
     const payload = getInquiryPayload();
-    if (!payload) {
-      return;
-    }
-
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(getInquiryMessage(payload))}`, "_blank", "noopener");
   };
 
   const openEmail = () => {
     const payload = getInquiryPayload();
-    if (!payload) {
-      return;
-    }
-
     const subject = encodeURIComponent(t("emailSubject"));
     const body = encodeURIComponent(getInquiryMessage(payload));
     window.location.href = `mailto:${INQUIRY_EMAIL}?subject=${subject}&body=${body}`;
@@ -756,14 +665,13 @@ export function BookingSection({ language }: BookingSectionProps) {
           <h2>{t("headline")}</h2>
 
           <form className="spdrive-route-form" onSubmit={handleRouteSubmit}>
-            <label className={`spdrive-field${hasInvalidField("pickup") ? " is-invalid" : ""}`}>
+            <label className="spdrive-field">
               <span>{t("pickupLabel")}</span>
               <Icon name="map-pin" />
               <input
                 value={pickup}
                 onChange={(event) => {
                   setPickup(event.target.value);
-                  clearInvalidFields("pickup");
                   resetRoute();
                 }}
                 onFocus={() => {
@@ -778,7 +686,6 @@ export function BookingSection({ language }: BookingSectionProps) {
                 aria-controls="spdrive-pickup-suggestions"
                 aria-expanded={pickupSuggestions.length > 0 || isPickupSearching}
                 placeholder={t("pickupPlaceholder")}
-                required
               />
               {pickup.trim().length >= AUTOCOMPLETE_MIN_LENGTH && (pickupSuggestions.length > 0 || isPickupSearching) ? (
                 <div className="spdrive-autocomplete-list" id="spdrive-pickup-suggestions" role="listbox">
@@ -796,14 +703,13 @@ export function BookingSection({ language }: BookingSectionProps) {
               <Icon name="swap" />
             </button>
 
-            <label className={`spdrive-field${hasInvalidField("destination") ? " is-invalid" : ""}`}>
+            <label className="spdrive-field">
               <span>{t("destinationLabel")}</span>
               <Icon name="flag" />
               <input
                 value={destination}
                 onChange={(event) => {
                   setDestination(event.target.value);
-                  clearInvalidFields("destination");
                   resetRoute();
                 }}
                 type="text"
@@ -813,7 +719,6 @@ export function BookingSection({ language }: BookingSectionProps) {
                 aria-controls="spdrive-destination-suggestions"
                 aria-expanded={destinationSuggestions.length > 0 || isDestinationSearching}
                 placeholder={t("destinationPlaceholder")}
-                required
               />
               {destination.trim().length >= AUTOCOMPLETE_MIN_LENGTH &&
               (destinationSuggestions.length > 0 || isDestinationSearching) ? (
@@ -825,7 +730,7 @@ export function BookingSection({ language }: BookingSectionProps) {
 
             <p className={`spdrive-route-note${note.isError ? " is-error" : ""}`}>{t(note.key)}</p>
 
-            <button className={`spdrive-primary-button${hasInvalidField("route") ? " is-invalid" : ""}`} type="submit">
+            <button className="spdrive-primary-button" type="submit">
               <Icon name="route" />
               <span>{t("calculateButton")}</span>
             </button>
@@ -882,30 +787,24 @@ export function BookingSection({ language }: BookingSectionProps) {
         </div>
 
         <div className={`spdrive-contact-panel${isCalendarOpen ? " is-calendar-open" : ""}`}>
-          <label className={`spdrive-field${hasInvalidField("customerName") ? " is-invalid" : ""}`}>
+          <label className="spdrive-field">
             <span>{t("nameLabel")}</span>
             <Icon name="user" />
             <input
               value={customerName}
-              onChange={(event) => {
-                setCustomerName(event.target.value);
-                clearInvalidFields("customerName");
-              }}
+              onChange={(event) => setCustomerName(event.target.value)}
               type="text"
               autoComplete="name"
               placeholder={t("namePlaceholder")}
             />
           </label>
 
-          <label className={`spdrive-field${hasInvalidField("telephone") ? " is-invalid" : ""}`}>
+          <label className="spdrive-field">
             <span>{t("telephoneLabel")}</span>
             <Icon name="phone" />
             <input
               value={telephone}
-              onChange={(event) => {
-                setTelephone(event.target.value);
-                clearInvalidFields("telephone");
-              }}
+              onChange={(event) => setTelephone(event.target.value)}
               type="tel"
               autoComplete="tel"
               placeholder={t("telephonePlaceholder")}
@@ -913,7 +812,7 @@ export function BookingSection({ language }: BookingSectionProps) {
           </label>
 
           <div
-            className={`spdrive-schedule${isCalendarOpen ? " is-open" : ""}${hasInvalidField("schedule") ? " is-invalid" : ""}`}
+            className={`spdrive-schedule${isCalendarOpen ? " is-open" : ""}`}
             ref={scheduleRef}
           >
             <span className="spdrive-schedule-label">{t("pickupScheduleLabel")}</span>
@@ -983,7 +882,6 @@ export function BookingSection({ language }: BookingSectionProps) {
                         disabled={value < todayValue}
                         onClick={() => {
                           setPickupDate(value);
-                          clearInvalidFields("schedule");
                         }}
                         aria-pressed={pickupDate === value}
                       >
@@ -1003,7 +901,6 @@ export function BookingSection({ language }: BookingSectionProps) {
                         onChange={(event) => {
                           const minute = pickupTime.split(":")[1] || "00";
                           setPickupTime(event.target.value ? `${event.target.value}:${minute}` : "");
-                          clearInvalidFields("schedule");
                         }}
                         aria-label={language === "de" ? "Stunde" : "Hour"}
                       >
@@ -1023,7 +920,6 @@ export function BookingSection({ language }: BookingSectionProps) {
                         onChange={(event) => {
                           const hour = pickupTime.split(":")[0] || "00";
                           setPickupTime(event.target.value ? `${hour}:${event.target.value}` : "");
-                          clearInvalidFields("schedule");
                         }}
                         aria-label={language === "de" ? "Minute" : "Minute"}
                       >
@@ -1050,14 +946,11 @@ export function BookingSection({ language }: BookingSectionProps) {
           </div>
 
           <div className="spdrive-contact-inline-fields">
-            <label className={`spdrive-field${hasInvalidField("passengers") ? " is-invalid" : ""}`}>
+            <label className="spdrive-field">
               <span>{t("passengersLabel")}</span>
               <input
                 value={passengers}
-                onChange={(event) => {
-                  setPassengers(event.target.value);
-                  clearInvalidFields("passengers");
-                }}
+                onChange={(event) => setPassengers(event.target.value)}
                 type="number"
                 min="1"
                 inputMode="numeric"
@@ -1065,14 +958,11 @@ export function BookingSection({ language }: BookingSectionProps) {
               />
             </label>
 
-            <label className={`spdrive-field${hasInvalidField("luggage") ? " is-invalid" : ""}`}>
+            <label className="spdrive-field">
               <span>{t("luggageLabel")}</span>
               <input
                 value={luggage}
-                onChange={(event) => {
-                  setLuggage(event.target.value);
-                  clearInvalidFields("luggage");
-                }}
+                onChange={(event) => setLuggage(event.target.value)}
                 type="number"
                 min="0"
                 inputMode="numeric"
@@ -1080,12 +970,6 @@ export function BookingSection({ language }: BookingSectionProps) {
               />
             </label>
           </div>
-
-          {invalidFields.length > 0 ? (
-            <p className="spdrive-contact-error" role="alert">
-              {t(note.key)}
-            </p>
-          ) : null}
 
           <button className="spdrive-whatsapp-button" type="button" onClick={openWhatsApp}>
             <Icon name="message" />
