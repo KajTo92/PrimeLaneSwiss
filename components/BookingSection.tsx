@@ -112,7 +112,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     price: "Estimated price",
     whatsappButton: "Send inquiry on WhatsApp",
     emailButton: "Send inquiry per mail",
-    emailSubject: "Swiss Prime Lane transfer inquiry",
+    emailSubject: "Prime Lane transfer inquiry",
     nameLabel: "Name",
     namePlaceholder: "John Smith",
     telephoneLabel: "Telephone number",
@@ -156,7 +156,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     price: "Geschatzter Preis",
     whatsappButton: "Anfrage per WhatsApp senden",
     emailButton: "Anfrage per E-Mail senden",
-    emailSubject: "Swiss Prime Lane Transfer Anfrage",
+    emailSubject: "Prime Lane Transfer Anfrage",
     nameLabel: "Name",
     namePlaceholder: "Max Muster",
     telephoneLabel: "Telefonnummer",
@@ -609,8 +609,8 @@ export function BookingSection({ language }: BookingSectionProps) {
 
   const getInquiryMessage = (payload: ReturnType<typeof getInquiryPayload>) =>
     language === "de"
-      ? `Hallo Swiss Prime Lane, ich mochte einen Transfer anfragen.\n\nName: ${payload.name}\nTelefon: ${payload.telephone}\nAbholdatum und Uhrzeit: ${payload.schedule}\nAnzahl Personen: ${payload.passengers}\nAnzahl Gepackstucke: ${payload.luggage}\nAbholung: ${payload.pickup}\nZiel: ${payload.destination}\nFahrzeug: ${payload.vehicle}\nDistanz: ${payload.distance}\nFahrzeit: ${payload.duration}\nGeschatzter Preis: ${payload.price}\n\nBitte senden Sie mir Verfugbarkeit und ein finales Angebot.`
-      : `Hello Swiss Prime Lane, I would like to request a transfer.\n\nName: ${payload.name}\nTelephone: ${payload.telephone}\nPickup date and time: ${payload.schedule}\nNumber of passengers: ${payload.passengers}\nNumber of suitcases: ${payload.luggage}\nPickup: ${payload.pickup}\nDestination: ${payload.destination}\nVehicle: ${payload.vehicle}\nDistance: ${payload.distance}\nTravel time: ${payload.duration}\nEstimated price: ${payload.price}\n\nPlease send me availability and a final quote.`;
+      ? `Hallo Prime Lane, ich mochte einen Transfer anfragen.\n\nName: ${payload.name}\nTelefon: ${payload.telephone}\nAbholdatum und Uhrzeit: ${payload.schedule}\nAnzahl Personen: ${payload.passengers}\nAnzahl Gepackstucke: ${payload.luggage}\nAbholung: ${payload.pickup}\nZiel: ${payload.destination}\nFahrzeug: ${payload.vehicle}\nDistanz: ${payload.distance}\nFahrzeit: ${payload.duration}\nGeschatzter Preis: ${payload.price}\n\nBitte senden Sie mir Verfugbarkeit und ein finales Angebot.`
+      : `Hello Prime Lane, I would like to request a transfer.\n\nName: ${payload.name}\nTelephone: ${payload.telephone}\nPickup date and time: ${payload.schedule}\nNumber of passengers: ${payload.passengers}\nNumber of suitcases: ${payload.luggage}\nPickup: ${payload.pickup}\nDestination: ${payload.destination}\nVehicle: ${payload.vehicle}\nDistance: ${payload.distance}\nTravel time: ${payload.duration}\nEstimated price: ${payload.price}\n\nPlease send me availability and a final quote.`;
 
   const openWhatsApp = () => {
     const payload = getInquiryPayload();
