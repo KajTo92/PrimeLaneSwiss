@@ -15,6 +15,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
@@ -171,7 +172,7 @@ body::before {
   transform: translateY(-1px);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1180px) {
   .nav-booking-button {
     display: none !important;
   }
@@ -181,7 +182,7 @@ body::before {
   display: none !important;
 }
 
-@media (min-width: 981px) {
+@media (min-width: 1181px) {
   .desktop-booking-button {
     display: inline-flex !important;
   }
@@ -1196,5 +1197,969 @@ body::before {
 @media (min-width: 1040px) {
   .spdrive-vehicle-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.additional-services {
+  position: relative;
+  z-index: 2;
+  padding: 0 1rem 5rem;
+}
+
+.service-tile,
+.partner-tile {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(246, 216, 139, 0.2);
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018) 48%, rgba(212, 169, 75, 0.055)),
+    rgba(8, 8, 10, 0.72);
+  color: #fff;
+  box-shadow:
+    0 24px 58px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+  transition:
+    transform 280ms ease,
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    background 280ms ease;
+}
+
+.service-tile {
+  min-height: 13.5rem;
+  padding: 2rem;
+}
+
+.service-tile::before,
+.partner-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0 18% auto;
+  z-index: -1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246, 216, 139, 0.88), transparent);
+  opacity: 0.6;
+  transition: inset 280ms ease, opacity 280ms ease;
+}
+
+.service-tile:hover,
+.service-tile:focus-visible,
+.partner-tile:hover,
+.partner-tile:focus-visible {
+  border-color: rgba(246, 216, 139, 0.52);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.022) 44%, rgba(212, 169, 75, 0.11)),
+    rgba(8, 8, 10, 0.82);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.38),
+    0 0 38px rgba(212, 169, 75, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transform: translateY(-4px);
+  outline: none;
+}
+
+.service-tile:hover::before,
+.service-tile:focus-visible::before,
+.partner-tile:hover::before,
+.partner-tile:focus-visible::before {
+  inset-inline: 8%;
+  opacity: 1;
+}
+
+.service-tile-glow {
+  position: absolute;
+  right: -5rem;
+  bottom: -6rem;
+  z-index: -1;
+  width: 15rem;
+  height: 15rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(212, 169, 75, 0.2), transparent 68%);
+  opacity: 0.5;
+  transition: opacity 280ms ease, transform 420ms ease;
+}
+
+.service-tile:hover .service-tile-glow,
+.service-tile:focus-visible .service-tile-glow,
+.partner-tile:hover .service-tile-glow,
+.partner-tile:focus-visible .service-tile-glow {
+  opacity: 1;
+  transform: scale(1.16);
+}
+
+.service-tile-icon,
+.rental-page-icon {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  width: 4.6rem;
+  height: 4.6rem;
+  place-items: center;
+  border: 1px solid rgba(246, 216, 139, 0.38);
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(145deg, rgba(246, 216, 139, 0.18), rgba(183, 134, 46, 0.045)),
+    rgba(255, 255, 255, 0.025);
+  color: #f6d88b;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.service-tile-icon::after,
+.rental-page-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0.48rem;
+  border: 1px solid rgba(246, 216, 139, 0.12);
+  border-radius: 0.95rem;
+}
+
+.service-tile-icon svg,
+.rental-page-icon svg {
+  z-index: 1;
+  width: 2.85rem;
+  height: 2.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.service-tile-content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.service-tile-kicker {
+  color: rgba(246, 216, 139, 0.75);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+}
+
+.service-tile-title {
+  margin-top: 0.55rem;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-weight: 620;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.service-tile-copy,
+.partner-address {
+  margin-top: 0.75rem;
+  color: rgba(255, 255, 255, 0.63);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.service-tile-arrow {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2.7rem;
+  height: 2.7rem;
+  place-items: center;
+  border: 1px solid rgba(246, 216, 139, 0.25);
+  border-radius: 999px;
+  color: #f6d88b;
+  transition: color 240ms ease, background 240ms ease, transform 240ms ease;
+}
+
+.service-tile-arrow svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.service-tile:hover .service-tile-arrow,
+.service-tile:focus-visible .service-tile-arrow,
+.partner-tile:hover .service-tile-arrow,
+.partner-tile:focus-visible .service-tile-arrow {
+  background: linear-gradient(135deg, #f6d88b, #b7862e);
+  color: #171006;
+  transform: translateX(3px);
+}
+
+#car-rental,
+#jobs,
+#partners {
+  scroll-margin-top: 5.5rem;
+}
+
+.partner-tile {
+  min-height: 8.5rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.partner-tile-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+}
+
+.partner-tile-icon svg {
+  width: 2.15rem;
+  height: 2.15rem;
+}
+
+.partner-tile .service-tile-title {
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
+}
+
+.partner-tile .partner-address {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+}
+
+.partner-address {
+  font-style: normal;
+}
+
+.jobs-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(14px);
+  animation: jobsBackdropIn 220ms ease both;
+}
+
+.jobs-modal {
+  position: relative;
+  isolation: isolate;
+  width: min(36rem, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(246, 216, 139, 0.35);
+  border-radius: 1.75rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(212, 169, 75, 0.055)),
+    rgba(8, 8, 10, 0.97);
+  padding: 2.35rem;
+  box-shadow:
+    0 34px 100px rgba(0, 0, 0, 0.72),
+    0 0 55px rgba(212, 169, 75, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: jobsModalIn 280ms cubic-bezier(0.2, 0.85, 0.35, 1) both;
+}
+
+.jobs-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0 12% auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #f6d88b, transparent);
+}
+
+.jobs-modal-orbit {
+  position: absolute;
+  right: -8rem;
+  bottom: -10rem;
+  z-index: -1;
+  width: 24rem;
+  height: 24rem;
+  border: 1px solid rgba(246, 216, 139, 0.09);
+  border-radius: 999px;
+  box-shadow:
+    0 0 80px rgba(212, 169, 75, 0.1),
+    inset 0 0 80px rgba(212, 169, 75, 0.05);
+}
+
+.jobs-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  transition: border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.jobs-modal-close:hover,
+.jobs-modal-close:focus-visible {
+  border-color: rgba(246, 216, 139, 0.55);
+  color: #f6d88b;
+  outline: none;
+  transform: rotate(6deg);
+}
+
+.jobs-modal-close svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.jobs-modal-icon {
+  width: 4.1rem;
+  height: 4.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.jobs-modal-copy {
+  max-width: 30rem;
+  margin-top: 1.4rem;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 1.04rem;
+  line-height: 1.7;
+}
+
+.jobs-modal-contact {
+  margin-top: 1.3rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.jobs-modal-contact a {
+  color: #f6d88b;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-color: rgba(246, 216, 139, 0.35);
+  text-underline-offset: 0.22em;
+}
+
+.rental-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.rental-page::before,
+.rental-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.rental-page::before {
+  background-color: #050506;
+  background-image: url("/media/kobieta.jpg");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.42;
+  transform: scale(1.025);
+}
+
+.rental-page::after {
+  z-index: -1;
+  background:
+    radial-gradient(circle at 70% 30%, rgba(212, 169, 75, 0.13), transparent 38%),
+    linear-gradient(to bottom, rgba(5, 5, 6, 0.46), rgba(5, 5, 6, 0.88));
+}
+
+.rental-page-hero {
+  display: flex;
+  min-height: 100svh;
+  align-items: center;
+  padding-top: 8rem;
+  padding-bottom: 4rem;
+}
+
+.rental-page-card {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+
+.rental-page-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 15% auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246, 216, 139, 0.88), transparent);
+}
+
+.rental-page-icon {
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 1.55rem;
+}
+
+.rental-page-heading {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.rental-page-title {
+  max-width: 46rem;
+  font-size: clamp(2.3rem, 5vw, 4.2rem);
+  line-height: 1.03;
+  letter-spacing: -0.04em;
+}
+
+.rental-page-intro {
+  margin-top: 0.7rem;
+}
+
+.rental-offer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(16rem, 0.72fr);
+  align-items: stretch;
+  gap: 1.5rem;
+  margin-top: 2.8rem;
+}
+
+.rental-car-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.rental-car-stage {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 27rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(246, 216, 139, 0.18);
+  border-radius: 1.6rem;
+  background:
+    radial-gradient(circle at 54% 46%, rgba(246, 216, 139, 0.12), transparent 46%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.065), rgba(5, 5, 6, 0.54));
+  padding: 2.2rem 1.2rem 1.6rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 22px 54px rgba(0, 0, 0, 0.23);
+}
+
+.rental-car-stage::before {
+  content: "";
+  position: absolute;
+  inset: 12% 10% auto;
+  z-index: -1;
+  height: 70%;
+  border: 1px solid rgba(246, 216, 139, 0.07);
+  border-radius: 999px;
+  transform: perspective(30rem) rotateX(68deg);
+}
+
+.rental-car-halo {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  z-index: -1;
+  width: min(34rem, 82%);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(212, 169, 75, 0.18), transparent 66%);
+  filter: blur(4px);
+  transform: translateX(-50%);
+}
+
+.rental-car-image {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 44rem);
+  height: auto;
+  filter: drop-shadow(0 28px 24px rgba(0, 0, 0, 0.54));
+  transform: translateY(-0.15rem);
+}
+
+.rental-car-shadow {
+  position: absolute;
+  bottom: 11%;
+  left: 50%;
+  z-index: 1;
+  width: 68%;
+  height: 7%;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  filter: blur(14px);
+  transform: translateX(-50%);
+}
+
+.rental-details {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.72fr) minmax(0, 1.28fr);
+  gap: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1.35rem;
+  background: rgba(7, 7, 9, 0.55);
+  padding: 1.15rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.rental-price-block {
+  display: flex;
+  min-height: 9rem;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid rgba(246, 216, 139, 0.24);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(212, 169, 75, 0.14), rgba(212, 169, 75, 0.035));
+  padding: 1.25rem;
+}
+
+.rental-price-block > span {
+  color: rgba(246, 216, 139, 0.72);
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.19em;
+}
+
+.rental-price-block strong {
+  margin-top: 0.45rem;
+  color: #fff;
+  font-size: clamp(1.65rem, 3.3vw, 2.45rem);
+  font-weight: 650;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+
+.rental-price-block small {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.42em;
+  font-weight: 500;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.rental-condition-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.rental-condition {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 0.9rem 1rem;
+}
+
+.rental-condition svg {
+  flex: 0 0 auto;
+  width: 1.65rem;
+  height: 1.65rem;
+  fill: none;
+  stroke: #f6d88b;
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rental-condition > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.rental-condition strong {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.89rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.rental-condition small {
+  margin-top: 0.22rem;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.rental-collage-button {
+  position: relative;
+  isolation: isolate;
+  min-height: 43rem;
+  overflow: hidden;
+  border: 1px solid rgba(246, 216, 139, 0.24);
+  border-radius: 1.6rem;
+  background: rgba(7, 7, 9, 0.75);
+  cursor: zoom-in;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 260ms ease, box-shadow 260ms ease, transform 260ms ease;
+}
+
+.rental-collage-button:hover,
+.rental-collage-button:focus-visible {
+  border-color: rgba(246, 216, 139, 0.6);
+  outline: none;
+  box-shadow:
+    0 28px 68px rgba(0, 0, 0, 0.42),
+    0 0 34px rgba(212, 169, 75, 0.12);
+  transform: translateY(-3px);
+}
+
+.rental-collage-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1), filter 260ms ease;
+}
+
+.rental-collage-button:hover .rental-collage-image,
+.rental-collage-button:focus-visible .rental-collage-image {
+  filter: brightness(1.04);
+  transform: scale(1.025);
+}
+
+.rental-collage-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 58%, rgba(0, 0, 0, 0.8));
+  pointer-events: none;
+}
+
+.rental-collage-label {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 3.25rem;
+  border: 1px solid rgba(246, 216, 139, 0.34);
+  border-radius: 999px;
+  background: rgba(7, 7, 9, 0.75);
+  color: #f8e4b1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
+.rental-collage-label svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rental-inquiry-panel {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(246, 216, 139, 0.18);
+  border-radius: 1.45rem;
+  background:
+    linear-gradient(145deg, rgba(212, 169, 75, 0.08), transparent 42%),
+    rgba(7, 7, 9, 0.58);
+  padding: 1.5rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.rental-selected-vehicle {
+  justify-self: start;
+}
+
+.rental-inquiry-panel > p {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+
+.rental-inquiry-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.rental-inquiry-actions .spdrive-whatsapp-button,
+.rental-inquiry-actions .spdrive-email-button {
+  margin: 0;
+}
+
+.rental-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1.5rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.rental-back-link:hover,
+.rental-back-link:focus-visible {
+  color: #f6d88b;
+  outline: none;
+  transform: translateX(-2px);
+}
+
+.rental-back-link svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rental-gallery-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(16px);
+  animation: jobsBackdropIn 220ms ease both;
+}
+
+.rental-gallery-modal {
+  position: relative;
+  width: min(40rem, 96vw);
+  max-height: 94svh;
+  overflow-y: auto;
+  border: 1px solid rgba(246, 216, 139, 0.34);
+  border-radius: 1.4rem;
+  background: #070709;
+  padding: 0.5rem;
+  box-shadow:
+    0 38px 110px rgba(0, 0, 0, 0.78),
+    0 0 50px rgba(212, 169, 75, 0.13);
+  animation: jobsModalIn 280ms cubic-bezier(0.2, 0.85, 0.35, 1) both;
+  scrollbar-color: rgba(246, 216, 139, 0.45) transparent;
+  scrollbar-width: thin;
+}
+
+.rental-gallery-close {
+  position: sticky;
+  top: 0.65rem;
+  z-index: 2;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0.2rem 0.2rem -2.95rem auto;
+  place-items: center;
+  border: 1px solid rgba(246, 216, 139, 0.38);
+  border-radius: 999px;
+  background: rgba(7, 7, 9, 0.82);
+  color: #f6d88b;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(12px);
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.rental-gallery-close:hover,
+.rental-gallery-close:focus-visible {
+  background: rgba(212, 169, 75, 0.2);
+  outline: none;
+  transform: rotate(6deg);
+}
+
+.rental-gallery-close svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.rental-gallery-full-image {
+  width: 100%;
+  height: auto;
+  border-radius: 1rem;
+}
+
+@keyframes jobsBackdropIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes jobsModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+}
+
+@media (max-width: 639px) {
+  .additional-services {
+    padding-bottom: 4rem;
+  }
+
+  .service-tile,
+  .partner-tile {
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.4rem;
+  }
+
+  .service-tile {
+    min-height: 12rem;
+  }
+
+  .service-tile-icon {
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 1.1rem;
+  }
+
+  .service-tile-icon svg {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .service-tile-arrow {
+    position: absolute;
+    right: 1.15rem;
+    bottom: 1.15rem;
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .service-tile-copy,
+  .partner-address {
+    padding-right: 1.8rem;
+  }
+
+  .jobs-modal {
+    padding: 1.7rem;
+    border-radius: 1.4rem;
+  }
+
+  .jobs-modal-icon {
+    margin-top: 0.5rem;
+  }
+
+  .rental-page-hero {
+    align-items: flex-start;
+    padding-top: 7.5rem;
+  }
+
+  .rental-page-title {
+    font-size: clamp(2.15rem, 11vw, 3.4rem);
+  }
+}
+
+@media (max-width: 900px) {
+  .rental-offer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rental-collage-button {
+    min-height: 0;
+    width: min(100%, 29rem);
+    justify-self: center;
+  }
+
+  .rental-collage-image {
+    height: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .rental-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .rental-page-icon {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .rental-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rental-price-block {
+    min-height: auto;
+  }
+
+  .rental-condition-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rental-inquiry-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .rental-car-stage {
+    min-height: 16.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .rental-condition-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rental-inquiry-panel {
+    padding: 1.1rem;
+  }
+
+  .rental-gallery-backdrop {
+    padding: 0.5rem;
+  }
+
+  .rental-gallery-modal {
+    width: 100%;
+    max-height: 96svh;
+    border-radius: 1rem;
+    padding: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-tile,
+  .partner-tile,
+  .jobs-modal-backdrop,
+  .jobs-modal,
+  .rental-collage-button,
+  .rental-collage-image,
+  .rental-gallery-backdrop,
+  .rental-gallery-modal {
+    animation: none;
+    transition: none;
   }
 }

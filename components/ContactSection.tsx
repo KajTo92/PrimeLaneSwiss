@@ -128,6 +128,38 @@ export function ContactSection({ language }: ContactSectionProps) {
           </div>
         </form>
       </div>
+
+      <a
+        id="partners"
+        href="https://www.google.com/maps/search/?api=1&query=T%20Plus%20Service%2C%20Mattenstrasse%2011%2C%205734%20Reinach%2C%20Switzerland"
+        target="_blank"
+        rel="noreferrer"
+        className="partner-tile group mx-auto mt-6 max-w-3xl"
+        aria-label={`${language === "de" ? "Partner" : "Partner"}: T Plus Service`}
+      >
+        <span className="service-tile-glow" aria-hidden="true" />
+        <span className="service-tile-icon partner-tile-icon">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M18.2 20.2 23 15.4a5.2 5.2 0 0 1 7.4 0l2.2 2.2" />
+            <path d="m29.8 27.8-4.8 4.8a5.2 5.2 0 0 1-7.4 0l-2.2-2.2" />
+            <path d="m20.8 27.2 6.4-6.4M12 16l-4 4 8.5 8.5 4-4M36 32l4-4-8.5-8.5-4 4" />
+          </svg>
+        </span>
+        <span className="service-tile-content">
+          <span className="service-tile-kicker">{language === "de" ? "UNSER PARTNER" : "OUR PARTNER"}</span>
+          <span className="service-tile-title">T Plus Service</span>
+          <span className="partner-address">
+            Mattenstrasse 11
+            <br />
+            5734 Reinach
+          </span>
+        </span>
+        <span className="service-tile-arrow">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14 5h5v5M19 5l-9 9M19 14v5H5V5h5" />
+          </svg>
+        </span>
+      </a>
     </section>
   );
 }
