@@ -7,8 +7,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Language } from "@/types/language";
 import aurisImage from "@/Media/vermietung/auris.png";
 import aurisCollage from "@/Media/vermietung/kolazauris.jpg";
+import priusImage from "@/Media/vermietung/prius.png";
 import peugeotBoxerImage from "@/Media/vermietung/peugeotboxer.png";
 import teslaModelSImage from "@/Media/vermietung/teslas.png";
+import teslaModelSCollage from "@/Media/vermietung/kolazteslas.jpg";
 
 const WHATSAPP_NUMBER = "41772037643";
 const INQUIRY_EMAIL = "Primelaneswiss@gmail.com";
@@ -39,7 +41,16 @@ function ExpandIcon() {
   );
 }
 
-function ConditionIcon({ type }: { type: "clock" | "calendar" | "charging" }) {
+function ConditionIcon({ type }: { type: "clock" | "calendar" | "charging" | "deposit" }) {
+  if (type === "deposit") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16v12H4zM4 10h16M16 14h4" />
+        <path d="M7 7V5h10v2" />
+      </svg>
+    );
+  }
+
   if (type === "charging") {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -103,11 +114,54 @@ export function CarRentalPage() {
           title: language === "de" ? "Mindestens 1 Monat" : "Minimum 1 month",
           description: language === "de" ? "Mindestmietdauer" : "Minimum rental period",
         },
+        {
+          type: "deposit" as const,
+          title: language === "de" ? "Kaution – 1'000 CHF" : "Deposit – CHF 1,000",
+          description: language === "de" ? "Rückzahlbare Kaution" : "Refundable deposit",
+        },
       ],
       inquiryDetails:
         language === "de"
-          ? "Preis: 1'199 CHF / Monat\nKilometer: Unbegrenzt\nMindestmietdauer: 1 Monat"
-          : "Price: CHF 1,199 / month\nMileage: Unlimited\nMinimum rental period: 1 month",
+          ? "Preis: 1'199 CHF / Monat\nKaution: 1'000 CHF\nKilometer: Unbegrenzt\nMindestmietdauer: 1 Monat"
+          : "Price: CHF 1,199 / month\nDeposit: CHF 1,000\nMileage: Unlimited\nMinimum rental period: 1 month",
+    },
+    {
+      id: "toyota-prius-plus",
+      brand: "Toyota Prius",
+      model: "Plus",
+      name: "Toyota Prius Plus",
+      image: priusImage,
+      galleryImage: priusImage,
+      usesPlaceholderGallery: true,
+      intro:
+        language === "de"
+          ? "Geräumiger Hybrid für komfortable und sparsame Fahrten."
+          : "A spacious hybrid for comfortable and efficient journeys.",
+      imageAlt: language === "de" ? "Weißer Toyota Prius Plus" : "White Toyota Prius Plus",
+      price: language === "de" ? "1'099 CHF" : "CHF 1,099",
+      priceSuffix: language === "de" ? "Monat" : "month",
+      conditions: [
+        {
+          type: "clock" as const,
+          title: language === "de" ? "Unbegrenzte Kilometer" : "Unlimited mileage",
+          description:
+            language === "de" ? "Fahren ohne Kilometerlimit" : "Drive without a mileage limit",
+        },
+        {
+          type: "calendar" as const,
+          title: language === "de" ? "Mindestens 1 Monat" : "Minimum 1 month",
+          description: language === "de" ? "Mindestmietdauer" : "Minimum rental period",
+        },
+        {
+          type: "deposit" as const,
+          title: language === "de" ? "Kaution – 1'000 CHF" : "Deposit – CHF 1,000",
+          description: language === "de" ? "Rückzahlbare Kaution" : "Refundable deposit",
+        },
+      ],
+      inquiryDetails:
+        language === "de"
+          ? "Preis: 1'099 CHF / Monat\nKaution: 1'000 CHF\nKilometer: Unbegrenzt\nMindestmietdauer: 1 Monat"
+          : "Price: CHF 1,099 / month\nDeposit: CHF 1,000\nMileage: Unlimited\nMinimum rental period: 1 month",
     },
     {
       id: "tesla-model-s",
@@ -115,8 +169,8 @@ export function CarRentalPage() {
       model: "Model S",
       name: "Tesla Model S",
       image: teslaModelSImage,
-      galleryImage: teslaModelSImage,
-      usesPlaceholderGallery: true,
+      galleryImage: teslaModelSCollage,
+      usesPlaceholderGallery: false,
       intro:
         language === "de"
           ? "Elektrische Premium-Mobilität mit kostenlosem Laden."
@@ -136,11 +190,16 @@ export function CarRentalPage() {
           title: language === "de" ? "Monatliche Miete" : "Monthly rental",
           description: language === "de" ? "Klarer Monatspreis" : "Clear monthly price",
         },
+        {
+          type: "deposit" as const,
+          title: language === "de" ? "Kaution – 2'000 CHF" : "Deposit – CHF 2,000",
+          description: language === "de" ? "Rückzahlbare Kaution" : "Refundable deposit",
+        },
       ],
       inquiryDetails:
         language === "de"
-          ? "Preis: 1'999 CHF / Monat\nLaden: Kostenlos"
-          : "Price: CHF 1,999 / month\nCharging: Free",
+          ? "Preis: 1'999 CHF / Monat\nKaution: 2'000 CHF\nLaden: Kostenlos"
+          : "Price: CHF 1,999 / month\nDeposit: CHF 2,000\nCharging: Free",
     },
     {
       id: "peugeot-boxer",
@@ -168,11 +227,16 @@ export function CarRentalPage() {
           title: language === "de" ? "Ganzer Tag – 120 CHF" : "Full day – CHF 120",
           description: language === "de" ? "12 Stunden" : "12 hours",
         },
+        {
+          type: "deposit" as const,
+          title: language === "de" ? "Kaution – 100 CHF" : "Deposit – CHF 100",
+          description: language === "de" ? "Rückzahlbare Kaution" : "Refundable deposit",
+        },
       ],
       inquiryDetails:
         language === "de"
-          ? "Halber Tag (6 Stunden): 80 CHF\nGanzer Tag (12 Stunden): 120 CHF"
-          : "Half day (6 hours): CHF 80\nFull day (12 hours): CHF 120",
+          ? "Halber Tag (6 Stunden): 80 CHF\nGanzer Tag (12 Stunden): 120 CHF\nKaution: 100 CHF"
+          : "Half day (6 hours): CHF 80\nFull day (12 hours): CHF 120\nDeposit: CHF 100",
     },
   ];
 
