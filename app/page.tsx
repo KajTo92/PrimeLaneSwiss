@@ -11,7 +11,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { PaymentSection } from "@/components/PaymentSection";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Language } from "@/types/language";
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import { useCallback, useState, type MouseEvent } from "react";
 
 export default function Home() {
   const [language, setLanguage] = useState<Language>(() => {
@@ -32,16 +32,6 @@ export default function Home() {
   const openJobs = useCallback(() => setIsJobsOpen(true), []);
   const closeJobs = useCallback(() => setIsJobsOpen(false), []);
 
-  useEffect(() => {
-    const animationFrame = window.requestAnimationFrame(() => {
-      if (window.location.hash === "#jobs") {
-        setIsJobsOpen(true);
-      }
-    });
-
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, []);
-
   const handleAfterHeroMouseMove = (event: MouseEvent<HTMLElement>) => {
     const { innerWidth, innerHeight } = window;
     const normalizedX = event.clientX / innerWidth - 0.5;
@@ -59,7 +49,6 @@ export default function Home() {
         language={language}
         onLanguageChange={switchLanguage}
         isHomePage
-        onOpenJobs={openJobs}
       />
       <HeroSection language={language} />
       <section

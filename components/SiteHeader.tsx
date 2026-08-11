@@ -9,20 +9,17 @@ type SiteHeaderProps = {
   language: Language;
   onLanguageChange: (language: Language) => void;
   isHomePage?: boolean;
-  onOpenJobs?: () => void;
 };
 
 type NavItem = {
   href: string;
   label: string;
-  opensJobs?: boolean;
 };
 
 export function SiteHeader({
   language,
   onLanguageChange,
   isHomePage = false,
-  onOpenJobs,
 }: SiteHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
@@ -41,7 +38,6 @@ export function SiteHeader({
     {
       href: homeHref("#jobs"),
       label: language === "de" ? "Jobs" : "Careers",
-      opensJobs: isHomePage,
     },
     { href: homeHref("#partners"), label: language === "de" ? "Partner" : "Partners" },
   ];
@@ -83,11 +79,6 @@ export function SiteHeader({
     return () => window.removeEventListener("resize", handleResize);
   }, [isMobileMenuOpen]);
 
-  const handleJobsClick = () => {
-    setIsMobileMenuOpen(false);
-    onOpenJobs?.();
-  };
-
   return (
     <header className="fixed top-0 left-0 right-0 z-30 border-b border-white/10 bg-black/45 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -102,22 +93,11 @@ export function SiteHeader({
         </Link>
 
         <nav className="hidden items-center gap-4 text-xs text-white/70 min-[1181px]:flex">
-          {navItems.map((item) =>
-            item.opensJobs ? (
-              <button
-                key={item.label}
-                type="button"
-                onClick={handleJobsClick}
-                className="cursor-pointer transition hover:text-white"
-              >
-                {item.label}
-              </button>
-            ) : (
-              <Link key={item.href} href={item.href} className="transition hover:text-white">
-                {item.label}
-              </Link>
-            ),
-          )}
+          {navItems.map((item) => (
+            <Link key={item.href} href={item.href} className="transition hover:text-white">
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <div ref={mobileMenuRef} className="relative flex items-center gap-2">
@@ -174,11 +154,7 @@ export function SiteHeader({
                 const className =
                   "group flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-white/78 transition hover:bg-[#d4a94b]/12 hover:text-[#f9dfac]";
 
-                return item.opensJobs ? (
-                  <button key={item.label} type="button" onClick={handleJobsClick} className={className}>
-                    {content}
-                  </button>
-                ) : (
+                return (
                   <Link
                     key={item.href}
                     href={item.href}
