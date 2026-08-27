@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Language } from "@/types/language";
 import { RotatingHeadline } from "@/components/RotatingHeadline";
 
@@ -18,20 +18,48 @@ export function HeroSection({ language }: HeroSectionProps) {
       ? ["Reisen mit Komfort", "Swiss Qualitat", "24/7 Service", 'Premium Transport']
       : ["Premium Transport", "Luxury Taxi Service", "Travel in Comfort", "Swiss Quality Rides"];
 
+  useEffect(() => {
+    if (isVideoReady) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isVideoReady]);
+
   return (
-    <section
-      id="hero"
-      className="relative flex min-h-screen items-center overflow-hidden px-4 pt-24 pb-14 sm:px-6 lg:px-8"
-    >
+    <>
+      {!isVideoReady ? (
+        <div className="site-loader" role="status" aria-live="polite">
+          <div className="site-loader-glow" aria-hidden="true" />
+          <div className="site-loader-mark" aria-hidden="true">
+            <span />
+          </div>
+          <p className="site-loader-brand">PRIME LANE</p>
+          <p className="site-loader-subtitle">GMBH SWISS</p>
+          <p className="site-loader-status">
+            {language === "de" ? "Erlebnis wird geladen" : "Loading your experience"}
+          </p>
+        </div>
+      ) : null}
+
+      <section
+        id="hero"
+        className="relative flex min-h-screen items-center overflow-hidden px-4 pt-24 pb-14 sm:px-6 lg:px-8"
+      >
       <motion.div className="hero-image-layer z-0" style={{ y: parallaxY }}>
         <video
           autoPlay
           loop
           muted
           playsInline
-          preload="metadata"
+          preload="auto"
           onCanPlay={() => setIsVideoReady(true)}
-          onLoadedData={() => setIsVideoReady(true)}
+          onError={() => setIsVideoReady(true)}
           className={`h-full w-full object-cover hero-background-video${isVideoReady ? " is-ready" : ""}`}
         >
           <source src="/media/bgfilmpc.mp4" type="video/mp4" />
@@ -108,6 +136,7 @@ export function HeroSection({ language }: HeroSectionProps) {
           </a>
         </motion.div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
